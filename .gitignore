@@ -3,3 +3,6 @@ log/
 
 # Virtual env
 venv3.11/
+
+# pycache
+*__pycache__/
