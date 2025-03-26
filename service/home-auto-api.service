@@ -23,7 +23,6 @@ KillMode=control-group
 KillSignal=SIGINT
 
 # Logging
-StandardOutput=append:/opt/home-auto/log/home.log
 StandardError=append:/opt/home-auto/log/home.log
 
 [Install]
