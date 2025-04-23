@@ -7,13 +7,11 @@ import atexit
 
 # Dedicated modules
 import subprocess
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
 # Personal modules
 sys.path.append("/opt/Python-Utils/utils/")
 from utils import Logger,DataBase,Timer,GetFuncName
+from api import Api
 
 # Init logger
 _logger=Logger(log_path="/opt/home-auto/log/home.log")
@@ -23,27 +21,6 @@ sys.excepthook = _logger.exception_handler
 
 # Init timer
 timer = Timer()
-
-def log_timer_stop():
-	exc_time = timer.stop()
-	_logger.info("Closed program")
-	_logger.debug(f"Execution time: {exc_time}")
-
-try:
-	atexit.register(log_timer_stop)
-except Exception as e:
-	err = str(e)
-	_logger.error(f"Could not register execution time : {e}")
-
-
-# Init fastapi
-try:
-	app = FastAPI()
-    origins = ["http://100.116.80.15:8020","http://192.168.1.100"]
-	app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
-except Exception as e:
-	err = "Could not start api" + ":" + str(e) + str(sys.exc_info())
-	_logger.error(err)
 
 class DigitalPin:
 	def __init__(self,aPin:str):
@@ -64,11 +41,22 @@ class Relay:
 	def __init__(self,aPin:str):
 		self.iPin=aPin
 	
+	def read(self):
+		status = subprocess.run(["cat", f"/run/unipi-plc/by-sys/RO{self.iPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+		if status.returncode != 0:
+			err = f"Error {status.returncode} : {status.stderr.decode().strip()}"
+			_logger.error(err)
+			return err
+		else:
+			data={"id":self.iPin,"state":str(status.stdout.decode().strip())}
+			return data
+	
 	def write(self,newState:int):
-        """
+		"""
         Change a relay's state on or off
 
-        newState: 1 (on), 2 (off)
+        newState: 1 (on), 0 (off)
 
         """
 
@@ -84,42 +72,32 @@ class Relay:
 			data={"status":200}
 			return data
 
-
-@app.get("/api/ReadPin/{iPin}")
-async def ReadPin(iPin:str):
-	pin = DigitalPin(aPin=iPin)
+def ReadPin(data,iPin:str):
+	pin = Relay(aPin=iPin)
 	return pin.read()
 
-@app.get("/api/ReadAllPins")
-async def ReadAllPins():
+def ReadAllPins():
     pins_state={
         "pins": []
     }
     for i in range(1,9):
         iPin="2."+str(i)
-        pin=DigitalPin(aPin=iPin)
+        pin=Relay(aPin=iPin)
         pin_status = pin.read()
         pins_state["pins"].append(pin_status)
     return pins_state
 
-@app.get("/api/WriteRelay/{iPin}/{status}")
-async def WriteRelay(iPin:str,status:int):
+def WriteRelay(data,iPin:str,status:str):
+	status=int(status)
 	if status != 0 and status != 1:
 		return {"error": f"Relay status {status} can't be set: incorrect status form"}
 	relay = Relay(aPin=iPin)
 	return relay.write(newState=status)
 
-
 if __name__ == "__main__":
-	uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
-
-
-
-
-
-
-
+	_api = Api(Port=8000,logger=_logger,init_message="Started test api",exit_message="Closed test api",allowed_origins=["http://100.116.80.15:8020"])
+	_api.add_get_request("/api/ReadAllPins",ReadAllPins)
+	_api.add_post_request(r"/api/ReadPin/(?P<iPin>2\.[1-9])",ReadPin)
+	_api.add_post_request(r"/api/WriteRelay/(?P<iPin>2\.[1-9])/(?P<status>[0-1])",WriteRelay)
+	_api.init_app()
 
