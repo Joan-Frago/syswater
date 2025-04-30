@@ -7,7 +7,7 @@ After=network.target
 
 [Service]
 # The command to start the service (required)
-ExecStart=/opt/home-auto/venv3.11/bin/python /opt/home-auto/code/main.py
+ExecStart=/opt/home-auto/venv310/bin/python /opt/home-auto/code/main.py
 
 # Directory where the service should run from (optional)
 WorkingDirectory=/opt/home-auto/code/
@@ -23,7 +23,7 @@ KillMode=control-group
 KillSignal=SIGINT
 
 # Logging
-StandardError=append:/opt/home-auto/log/home.log
+# StandardError=append:/opt/home-auto/log/home.log
 
 [Install]
 # The target to link the service to for automatic start at boot
@@ -31,4 +31,4 @@ StandardError=append:/opt/home-auto/log/home.log
 WantedBy=multi-user.target
 
 # Create an alias so as not to use the full service name
-Alias=home-auto-api
+Alias=home-auto

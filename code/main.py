@@ -10,7 +10,7 @@ import subprocess
 
 # Personal modules
 sys.path.append("/opt/Python-Utils/utils/")
-from utils import Logger,DataBase,Timer,GetFuncName,GetTime
+from utils import Logger,DataBase,Timer,GetFuncName,GetTime,get_json_data
 from api import Api
 
 # Init logger
@@ -23,29 +23,31 @@ timer = Timer()
 
 class Base:
 	def __init__(self):
+		self.json_file="/opt/home-auto/config/conf.json"
 		self.unipi_sys_base_dir=""
 		self.database_info={}
+		self.run_mode=""
 	def set_running_mode(self,virtual_mode:bool=False):
 		# Start in normal or virtual mode
-		VIRTUAL_MODE=virtual_mode
-		if VIRTUAL_MODE:
-			# Initialize virtual mode variables
-			self.unipi_sys_base_dir="/opt/home-auto/code/virtual_pins/"
-			self.database_info={
-				"Host":"127.0.0.1"
-				,"User":"joan"
-				,"Password":"2126"
-				,"DataBase":"home_automation"
-			}
+
+		#---------------------------------------------------------------------------#
+		#		I SHOULD GENERATE THE JSON DINAMICALLY BASED ON DATABASE INFO		#
+		#---------------------------------------------------------------------------#
+		iDic=get_json_data(aJsonFileDir=self.json_file)
+		if virtual_mode:
+			self.run_mode="virtual"
 		else:
-			# Initialize normal mode variables
-			self.unipi_sys_base_dir="/run/unipi-plc/by-sys/"
-			self.database_info={
-				"Host":"192.168.1.100"
-				,"User":"joan"
-				,"Password":"2126"
-				,"DataBase":"home_automation"
-			}
+			self.run_mode="normal"
+		# Initialize mode variables
+		self.unipi_sys_base_dir=iDic["config"]["run_mode"][self.run_mode]["unipi-sys-base-dir"]
+		db_info=iDic["config"]["run_mode"][self.run_mode]["database-info"]
+		self.database_info={
+			"Host":db_info["Host"]
+			,"User":db_info["User"]
+			,"Password":db_info["Password"]
+			,"DataBase":db_info["DataBase"]
+		}
+		_logger.debug(f"Running in {self.run_mode} mode")
 
 class DigitalPin(Base):
 	def __init__(self,aPin:str):
@@ -187,8 +189,14 @@ class Historify:
 	"""
 	def __init__(self,aInstance:Relay|DigitalPin,aTable:str):
 		self.iTable=aTable
+		self.relay=aInstance
 		self.idrelay=aInstance.iPin
-		self.iDb=DataBase(Host="192.168.1.100",User="joan",Password="2126",DataBase="home_automation")
+		self.iDb=DataBase(
+			Host=self.relay.database_info["Host"]
+			,User=self.relay.database_info["User"]
+			,Password=self.relay.database_info["Password"]
+			,DataBase=self.relay.database_info["DataBase"]
+		)
 	def add(self,new_pin_state:str):
 		try:
 			self.iDb.connect()

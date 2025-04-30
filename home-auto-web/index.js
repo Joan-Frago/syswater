@@ -11,8 +11,27 @@
 //               {"pin":"2.8","state":"0"}
 //           ]
 // }
+
+let api_ip="";
+let api_port="";
+
+function setData(){
+  return fetch('http://127.0.0.1/home-auto-web/config/conf.json')
+  .then((response) => response.json())
+  .then((config) => {
+    api_ip=config.config.run_mode.virtual.api_ip;
+    api_port=config.config.run_mode.virtual.api_port;
+  })
+  .catch((error) => {
+    console.error("Error fetching config json file: ",error);
+  })
+}
+  
+
+
 function fetchPinStates() {
-  fetch("http://100.82.57.41:8000/api/ReadAllPins")
+  let iRoute=`http://${api_ip}:${api_port}/api/ReadAllPins`;
+  fetch(iRoute)
     .then(response => response.json()) // Convert response to JSON
     .then(data => {
       data.pins.forEach((pin) => {
@@ -40,8 +59,10 @@ function fetch_state_change(pin,state) {
   if (state != 0 && state != 1) {
     // not valid
     console.log("Invalid state in fetch_state_change: ",state)
+    return;
   }
-  fetch(`http://100.82.57.41:8000/api/WriteRelay/${pin}/${state}`, {
+  let iRoute=`http://${api_ip}:${api_port}/api/WriteRelay/${pin}/${state}`;
+  fetch(iRoute, {
     method:"POST",
     headers:{
       "Content-Type": "application/json",
@@ -66,7 +87,8 @@ function fetch_state_change(pin,state) {
       console.error("Error calling api to change relay state:", error);
     });
 }
-
-setInterval(fetchPinStates, 600000);
-fetchPinStates(); // Initial fetch on page load
+setData().then(() => {
+  fetchPinStates();
+  setInterval(fetchPinStates, 600000);
+});
 
