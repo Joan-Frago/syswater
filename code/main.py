@@ -7,10 +7,11 @@ import atexit
 
 # Dedicated modules
 import subprocess
+import threading
 
 # Personal modules
 sys.path.append("/opt/Python-Utils/utils/")
-from utils import Logger,DataBase,Timer,GetFuncName,GetTime,get_json_data,dict2json,writeFile
+from utils import Logger,DataBase,Timer,GetFuncName,GetTime,get_json_data,dict2json,writeFile,wait
 from api import Api
 
 # Init logger
@@ -75,7 +76,6 @@ class Base:
 			,"Password":db_info["Password"]
 			,"DataBase":db_info["DataBase"]
 		}
-		_logger.debug(f"Running in {self.run_mode} mode")
 
 class DigitalPin(Base):
 	def __init__(self,aPin:str):
@@ -99,11 +99,12 @@ class Relay(Base):
 		super().__init__()
 		self.set_running_mode(virtual_mode=True)
 		self.iPin=aPin
-		# Start the relay if specified in calendar
 		self.calendar=Calendar(self)
-		# Init historify for a relay
 		self.hist=Historify(self,aTable="historify")
 		self.start_relay()
+
+
+		_logger.debug(f"Relay {self.iPin} running in {self.run_mode} mode")
 	
 	def read(self):
 		status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}RO{self.iPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -138,7 +139,7 @@ class Relay(Base):
 			#				I SHOULD HISTORIFY WHEN A PIN'S STATE CHANGES				#
 			#				not when I write a different value to that pin				#
 			#---------------------------------------------------------------------------#
-			self.hist.add(new_pin_state=newState)
+			# self.hist.add_hist(new_pin_state=newState)
 			return data
 	
 	def start_relay(self):
@@ -170,6 +171,7 @@ class Calendar:
 			,User=self.relay.database_info["User"]
 			,Password=self.relay.database_info["Password"]
 			,DataBase=self.relay.database_info["DataBase"]
+			,buffered=True
 		)
 		self.get_data()
 	def set_data(self):
@@ -229,7 +231,26 @@ class Historify:
 			,Password=self.relay.database_info["Password"]
 			,DataBase=self.relay.database_info["DataBase"]
 		)
-	def add(self,new_pin_state:str):
+		self.init_hist_thread()
+	def init_hist_thread(self):
+		try:
+			iTarget=self.main_hist
+			iThreadName="Thread_relay_"+str(self.relay.iPin)
+			threading.Thread(target=iTarget,name=iThreadName)
+		except Exception as e:
+			err="Error creating new thread for "+str(self.relay.iPin)+" pin historification"
+			_logger.error(err)
+	def main_hist(self):
+		last_pin_state=None
+		while True:
+			if last_pin_state is None: last_pin_state=self.relay.read()
+			read_pin=self.relay.read()
+			pin_state=read_pin["state"]
+			if pin_state!=last_pin_state:
+				self.add_hist(new_pin_state=pin_state)
+				last_pin_state=pin_state
+			wait(seconds=5)
+	def add_hist(self,new_pin_state:str):
 		try:
 			self.iDb.connect()
 			iTs=GetTime(aTimeZone="Europe/Madrid",accuracy="s")
@@ -241,7 +262,7 @@ class Historify:
 			# iSql=f"INSERT INTO {iParams[0]} (idrelay,newstate,ts) VALUES ('{iParams[1]}','{iParams[2]}','{iParams[3]}')"
 			# _logger.debug(iSql)
 		except Exception as e:
-			err="Error in Relay.Historify.add function : "+str(sys.exc_info())+" : "+str(e)
+			err="Error in Relay.Historify.add_hist function : "+str(sys.exc_info())+" : "+str(e)
 			_logger.error(err)
 
 class RelayHandler:
