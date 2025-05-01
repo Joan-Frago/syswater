@@ -30,38 +30,8 @@ class Base:
 		self.isVirtual=True
 		self.run_mode=""
 	def set_conf(self):
-		if self.isVirtual:
-			self.run_mode="virtual"
-			iDic={
-				  	"config": {
-				        "unipi_sys_base_dir": "/opt/home-auto/code/virtual_pins/",
-				        "database_info": {
-				          "Host": "127.0.0.1",
-				          "User": "joan",
-				          "Password": "2126",
-				          "DataBase": "home_automation"
-				        }
-				        ,"api_ip":"127.0.0.1"
-				        ,"api_port":"8000"
-				      	}
-				    }
-		else:
-			self.run_mode="normal"
-			iDic={
-				  	"config": {
-				        "unipi_sys_base_dir": "/run/unipi-plc/by-sys/",
-				        "database_info": {
-				          "Host": "192.168.1.100",
-				          "User": "joan",
-				          "Password": "2126",
-				          "DataBase": "home_automation"
-				        }
-				        ,"api_ip":"100.82.57.41"
-				        ,"api_port":"8000"
-				      	}
-				    }
-		iJson=dict2json(iDic)
-		writeFile(aFile="../home-auto-web/config/conf.json",aContent=iJson,fileMode="w",newLine=False)
+		if self.isVirtual:self.run_mode="virtual"
+		else:self.run_mode="normal"
 	def set_running_mode(self,virtual_mode:bool=True):
 		self.isVirtual=virtual_mode
 		self.set_conf()
