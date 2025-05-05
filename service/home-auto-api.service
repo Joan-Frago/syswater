@@ -7,7 +7,7 @@ After=network.target
 
 [Service]
 # The command to start the service (required)
-ExecStart=/opt/home-auto/venv310/bin/python /opt/home-auto/code/main.py
+ExecStart=/opt/home-auto/venv310/bin/python /opt/home-auto/code/homeApi.py
 
 # Directory where the service should run from (optional)
 WorkingDirectory=/opt/home-auto/code/

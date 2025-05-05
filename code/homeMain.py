@@ -12,7 +12,6 @@ import threading
 # Personal modules
 sys.path.append("/opt/Python-Utils/utils/")
 from utils import Logger,DataBase,Timer,GetFuncName,GetTime,get_json_data,dict2json,writeFile,wait
-from api import Api
 
 # Init logger
 _logger=Logger(log_path="/opt/home-auto/log/home.log")
@@ -29,6 +28,12 @@ class Base:
 		self.database_info={}
 		self.isVirtual=True
 		self.run_mode=""
+		self.application_running=True
+
+		atexit.register(self.exit_application)
+
+	def exit_application(self):
+		self.application_running=False
 	def set_conf(self):
 		if self.isVirtual:self.run_mode="virtual"
 		else:self.run_mode="normal"
@@ -71,7 +76,7 @@ class Relay(Base):
 		self.iPin=aPin
 		self.calendar=Calendar(self)
 		self.hist=Historify(self,aTable="historify")
-		self.start_relay()
+		self.update_relay_state()
 
 
 		_logger.debug(f"Relay {self.iPin} running in {self.run_mode} mode")
@@ -105,14 +110,9 @@ class Relay(Base):
 			return err
 		else:
 			data={"status":200}
-			#---------------------------------------------------------------------------#
-			#				I SHOULD HISTORIFY WHEN A PIN'S STATE CHANGES				#
-			#				not when I write a different value to that pin				#
-			#---------------------------------------------------------------------------#
-			# self.hist.add_hist(new_pin_state=newState)
 			return data
 	
-	def start_relay(self):
+	def update_relay_state(self):
 		"""
 		Start the relay if specified in calendar
 		"""
@@ -143,7 +143,7 @@ class Calendar:
 			,DataBase=self.relay.database_info["DataBase"]
 			,buffered=True
 		)
-		self.get_data()
+		self.update_data()
 	def set_data(self):
 		# {
 		#     "calendar": {
@@ -160,14 +160,14 @@ class Calendar:
 		self.startDate=iStartDate
 		self.endDate=iEndDate
 		self.isActive=[False,True][iDateActive==1]
-	def get_data(self):
+	def update_data(self):
 		try:
 			"""
 			Start the relay at a specific date
 			"""
 			self.iDb.connect()
 			if self.iDb is None:
-				err=f"Could not connect to bd in Relay.Calendar.{self.get_data.__name__} function"
+				err=f"Could not connect to bd in Relay.Calendar.{self.update_data.__name__} function"
 				_logger.error(err)
 				pass
 			iSql=f"SELECT * FROM relay WHERE id='RO{str(self.relay.iPin)}'"
@@ -175,7 +175,7 @@ class Calendar:
 			iRet=self.iDb.fetchdata()
 			self.iDb.close()
 			if iRet == [] or not isinstance(iRet,list):
-				err="Could not fetch data : "+str(self.get_data.__name__+" function")
+				err="Could not fetch data : "+str(self.update_data.__name__+" function")
 				err+="\n"
 				err+=str(self.iDb.fetchdata.__name__)+" function response: "+str(iRet)
 				_logger.error(err)
@@ -185,7 +185,34 @@ class Calendar:
 			self.set_data()
 			
 		except Exception as e:
-			_logger.error(f"Error in {str(self.get_data.__name__)} : {str(sys.exc_info())} : {str(e)}")
+			_logger.error(f"Error in {str(self.update_data.__name__)} : {str(sys.exc_info())} : {str(e)}")
+	def insert_new_data(self,aData:dict):
+			# {'iObj':{
+			# 	'pin': '2.1'
+			# 	,'calendar':{
+			# 		'start_date': '2023-12-20T15:29'
+			# 		,'end_date': '2025-05-28T00:00'
+			# 		}
+			# 	}
+			# }
+		try:
+			self.iDb.connect()
+			if self.iDb is None:
+				err=f"Could not connect to bd in Relay.Calendar.{self.update_data.__name__} function"
+				_logger.error(err)
+				pass
+
+			iId="RO"+str(aData["iObj"]["pin"])
+			iStartDate=NormDate(str(aData["iObj"]["calendar"]["start_date"]))
+			iEndDate=NormDate(str(aData["iObj"]["calendar"]["end_date"]))
+			iActive="1"
+			iParams=[iStartDate,iEndDate,iActive,iId]
+			iSql="UPDATE relay SET start_date=%s,end_date=%s,date_active=%s WHERE id = %s"
+			self.iDb.execute(iSql,iParams)
+			self.iDb.close()
+			self.update_data()
+		except Exception as e:
+			_logger.error(f"Error in {str(self.insert_new_data.__name__)} : {str(sys.exc_info())} : {str(e)}")
 
 class Historify:
 	"""
@@ -205,23 +232,25 @@ class Historify:
 	def init_hist_thread(self):
 		try:
 			iTarget=self.main_hist
-			iThreadName="Thread_relay_"+str(self.relay.iPin)
-			iThread=threading.Thread(target=iTarget,name=iThreadName)
+			iThreadName="Thread_relay_"+str(self.idrelay)
+			iThread=threading.Thread(target=iTarget,name=iThreadName,daemon=True)
 			iThread.start()
 		except Exception as e:
-			err="Error creating new thread for "+str(self.relay.iPin)+" pin historification"
+			err="Error creating new thread for "+str(self.idrelay)+" pin historification"
 			_logger.error(err)
 	def main_hist(self):
 		try:
 			last_pin_state=None
-			while True:
-				if last_pin_state is None: last_pin_state=self.relay.read()
+			while self.relay.application_running:
+				if last_pin_state is None:
+					last_pin_state=self.relay.read()
+					last_pin_state=last_pin_state["state"]
 				read_pin=self.relay.read()
 				pin_state=read_pin["state"]
 				if pin_state!=last_pin_state:
 					self.add_hist(new_pin_state=pin_state)
 					last_pin_state=pin_state
-				wait(seconds=5)
+				wait(seconds=1)
 		except Exception as e:
 			err="Historify.main_hist : "+str(sys.exc_info)+" : "+str(e)
 			_logger.error(err)
@@ -271,41 +300,17 @@ class RelayHandler:
 				return self.relay8
 		return None
 
-
-def ReadPin(data,aPin:str):
-	iPin = rl_handler.get_relay(aPin)
-	return iPin.read()
-
-def ReadAllPins():
-    pins_state={
-        "pins": []
-    }
-    for i in range(1,9):
-        iPin="2."+str(i)
-        pin=rl_handler.get_relay(iPin)
-        pin_status = pin.read()
-        pins_state["pins"].append(pin_status)
-    return pins_state
-
-def WriteRelay(data,aPin:str,aStatus:str):
-	aStatus=int(aStatus)
-	if aStatus != 0 and aStatus != 1:
-		return {"error": f"Relay status {aStatus} can't be set: incorrect status form"}
-	relay = rl_handler.get_relay(aPin)
+def NormDate(aDate:str):
+	"""
+	Normalize a date coming from raw html form
 	
-	return relay.write(newState=aStatus)
+	It must enter with the following format
+	* 2023-12-20T15:29
 
-def GetCalendar(data,aPin:str):
-	relay=rl_handler.get_relay(aPin)
-	calendar_data=relay.calendar.calendarInfo
-	return calendar_data
+	It must return with the following format
+	* 2023-12-20 15:29
+	"""
+	iDate=aDate.replace("T"," ")
+	return iDate
 
-if __name__ == "__main__":
-	rl_handler=RelayHandler()
-	_api = Api(Port=8000,logger=_logger,init_message="Started home automation api",exit_message="Closed home automation api",allowed_origins=["http://100.116.80.15:8020","http://homeserver:8020","http://100.117.134.68","http://127.0.0.1"])
-	_api.add_get_request("/api/ReadAllPins",ReadAllPins)
-	_api.add_post_request(r"/api/ReadPin/(?P<aPin>2\.[1-9])",ReadPin)
-	_api.add_post_request(r"/api/WriteRelay/(?P<aPin>2\.[1-9])/(?P<aStatus>[0-1])",WriteRelay)
-	_api.add_post_request(r"/api/GetCalendar/(?P<aPin>2\.[1-9])",GetCalendar)
-	_api.init_app()
 
