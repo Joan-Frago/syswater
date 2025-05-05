@@ -87,8 +87,52 @@ function fetch_state_change(pin,state) {
       console.error("Error calling api to change relay state:", error);
     });
 }
+function CalendarSubmit(event,aPin){
+  event.preventDefault();
+
+  const iForm=document.getElementById(`calendar-form-${aPin}`);
+  const iData=new FormData(iForm);
+  const iStartDate=iData.get("iStartDate"); // attr name of the input
+  const iEndDate=iData.get("iEndDate");
+
+  let iObj={
+    pin:aPin
+    ,calendar: {
+      start_date: iStartDate
+      ,end_date: iEndDate
+    }
+  };
+
+  console.log(iObj);
+
+  let iRoute=`http://${api_ip}:${api_port}/api/SetCalendar/${aPin}`;
+  fetch(iRoute, {
+    method:"POST",
+    headers:{
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({iObj}),
+  })
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
+      fetchPinStates();
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Relay state changed successfully:",data);
+    })
+    .catch(error => {
+      const container = document.getElementById(`error-${aPin}`);
+      container.innerHTML = `
+        <p class="error-message">Failed in api call. Please try again later.</p>
+        <p class="error-message">Error:</p><p>${error}</p>
+      `;
+
+      console.error("Error calling api to change relay state:", error);
+    });
+}
 setData().then(() => {
   fetchPinStates();
-  setInterval(fetchPinStates, 600000);
+  setInterval(fetchPinStates, 5000);
 });
 

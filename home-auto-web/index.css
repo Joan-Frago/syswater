@@ -38,7 +38,7 @@ body {
 }
 
 .p-pin-title {
-    font-size: 18px;
+    font-size: 24px;
     font-weight: bold;
     margin: 0;
     color: #333;
@@ -90,4 +90,31 @@ body {
 #btn-pin-state-change-down:hover {
     background-color: #000;
     transition: 0.5s;
+}
+.p-calendar{
+    text-align:center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    padding-top:1vh;
+    padding-bottom:2vh;
+    width:100%;
+}
+.div-calendar-selector{
+    text-align:center;
+    background-color:#eaeaea;
+    border:1px solid #ccc;
+    border-radius:5px;
+    padding:10px;
+    width:100%;
+    box-sizing:border-box;
+}
+.div-calendar{
+    background-color:#f5e6d4;
+    border:2px solid #d2b48c;
+    border-radius:5px;
+    margin-top:2vh;
+    padding:10px;
+    width:100%;
+    box-sizing:border-box;
 }
