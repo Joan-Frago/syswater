@@ -76,11 +76,22 @@ class Relay(Base):
 		self.iPin=aPin
 		self.calendar=Calendar(self)
 		self.hist=Historify(self,aTable="historify")
-		self.update_relay_state()
-
-
+		self.init_update_thread()
 		_logger.debug(f"Relay {self.iPin} running in {self.run_mode} mode")
+
+	def init_update_thread(self):
+		iTarget=self.main_update_thread
+		iThreadName="Thread_relay_"+str(self.iPin)
+		self.iRelayThread=threading.Thread(target=iTarget,name=iThreadName,daemon=True)
+		self.iRelayThread.start()
 	
+	def main_update_thread(self):
+		while self.application_running:
+			self.update_relay_state()
+			self.calendar.update_data()
+			self.hist.update_hist()
+			wait(seconds=3)
+
 	def read(self):
 		status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}RO{self.iPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -117,8 +128,7 @@ class Relay(Base):
 		Start the relay if specified in calendar
 		"""
 
-		if not self.calendar.isActive or (self.calendar.startDate and self.calendar.endDate):
-			self.write(0)
+		if not self.calendar.isActive or (self.calendar.startDate is None and self.calendar.endDate is None):
 			return
 		
 		now=GetTime()
@@ -210,7 +220,6 @@ class Calendar:
 			iSql="UPDATE relay SET start_date=%s,end_date=%s,date_active=%s WHERE id = %s"
 			self.iDb.execute(iSql,iParams)
 			self.iDb.close()
-			self.update_data()
 		except Exception as e:
 			_logger.error(f"Error in {str(self.insert_new_data.__name__)} : {str(sys.exc_info())} : {str(e)}")
 
@@ -228,29 +237,17 @@ class Historify:
 			,Password=self.relay.database_info["Password"]
 			,DataBase=self.relay.database_info["DataBase"]
 		)
-		self.init_hist_thread()
-	def init_hist_thread(self):
+		self.last_pin_state=None
+	def update_hist(self):
 		try:
-			iTarget=self.main_hist
-			iThreadName="Thread_relay_"+str(self.idrelay)
-			iThread=threading.Thread(target=iTarget,name=iThreadName,daemon=True)
-			iThread.start()
-		except Exception as e:
-			err="Error creating new thread for "+str(self.idrelay)+" pin historification"
-			_logger.error(err)
-	def main_hist(self):
-		try:
-			last_pin_state=None
-			while self.relay.application_running:
-				if last_pin_state is None:
-					last_pin_state=self.relay.read()
-					last_pin_state=last_pin_state["state"]
-				read_pin=self.relay.read()
-				pin_state=read_pin["state"]
-				if pin_state!=last_pin_state:
-					self.add_hist(new_pin_state=pin_state)
-					last_pin_state=pin_state
-				wait(seconds=1)
+			if self.last_pin_state is None:
+				self.last_pin_state=self.relay.read()
+				self.last_pin_state=self.last_pin_state["state"]
+			read_pin=self.relay.read()
+			pin_state=read_pin["state"]
+			if pin_state!=self.last_pin_state:
+				self.add_hist(new_pin_state=pin_state)
+				self.last_pin_state=pin_state
 		except Exception as e:
 			err="Historify.main_hist : "+str(sys.exc_info)+" : "+str(e)
 			_logger.error(err)
