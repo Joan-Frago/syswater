@@ -54,15 +54,44 @@ class Base:
             ,buffered=True
         )
 
-        self.set_conf()
-
         atexit.register(self.exit_application)
 
     def exit_application(self):
         self.application_running=False
-    def set_conf(self):
-        if self.iIsVirtual:self.run_mode="virtual"
-        else:self.run_mode="normal"
+    def set_conf(self,aTable:str):
+        try:
+            self.iDb.connect()
+            if self.iDb is None:
+                err=f"Could not connect to bd in Base.set_conf function"
+                _logger.error(err)
+                pass
+            iParams=[str(self.iIdPin)]
+            iSql=f"SELECT * FROM {aTable} WHERE idpin=%s"
+            self.iDb.execute(aQuery=iSql,aParams=iParams)
+            iRet=self.iDb.fetchdata()
+            self.iDb.close()
+            if iRet == [] or not isinstance(iRet,list):
+                err="Could not fetch data in Base.set_conf function"
+                err+="\n"
+                err+="Function response: "+str(iRet)
+                _logger.error(err)
+                raise Exception(err)
+            
+            iRet=iRet[0]
+            self.iName=iRet["name"]
+            self.iDesc=iRet["description"]
+            self.iIsVirtual=iRet["isvirtual"]
+            self.iType=iRet["type"]
+            self.iIO=iRet["io"]
+            self.iIsHist=iRet["hist"]
+            self.iHistPeriod=iRet["histperiod"]
+            if self.iIsVirtual:self.run_mode="virtual"
+            else:self.run_mode="normal"
+
+        except Exception as e:
+            err="Error in Base.set_conf function. Error: "+str(e)+" : "+str(sys.exc_info())
+            _logger.error(err)
+
 
 class DigitalPin(Base):
     def __init__(self
@@ -88,11 +117,13 @@ class DigitalPin(Base):
                         ,aIsHist
                         ,aHistPeriod
                         )
+        self.set_conf(aTable="digitalpin")
         self.hist=Historify(self,aTable="historify")
-        _logger.debug(f"Digital Pin {self.iIdPin} running in {self.run_mode} mode")
+        self.init_digital_thread()
+        _logger.info(f"Digital Pin {self.iIdPin} running in {self.run_mode} mode")
 
     def init_digital_thread(self):
-        iTarget=self.main_digital_thread()
+        iTarget=self.main_digital_thread
         iThreadName="Thread_digital_"+str(self.iIdPin)
         self.iDigitalThread=threading.Thread(target=iTarget,name=iThreadName,daemon=True)
         self.iDigitalThread.start()
@@ -105,14 +136,15 @@ class DigitalPin(Base):
                  iThreadName="Thread_digital_master"+str(self.iIdPin)
                  iMasterThread=threading.Thread(target=iTarget,name=iThreadName,daemon=True)
                  iMasterThread.start()
-            self.hist.update_hist()
-            wait(seconds=3)
+            if self.iIsHist:
+                self.hist.update_hist()
+                wait(seconds=int(self.iHistPeriod))
+            else: wait(seconds=10)
     def master_thread(self):
         iMasterTimeLimit=5 # Number of seconds to wait
         running=True
         iCounter=0
         iLastTime=GetTimestamp()
-        iLastValue=int(self.read()["state"])
         while running:
             iTime=GetTimestamp()
             time_diff=TimestampTimeDiff(iLastTime,iTime)
@@ -125,11 +157,11 @@ class DigitalPin(Base):
                     iValue=int(self.read()["state"])
                     if iValue==1:iCounter+=1
             else:
-                running=False
-                break
+                wait(seconds=1)
             iLastTime=iTime
-        # historifico el pin digital
-        self.hist.add_hist(new_pin_state=1)
+        if self.iIsHist:
+            # historifico el pin digital
+            self.hist.add_hist(new_pin_state=1)
 
     def read(self):
         status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -153,7 +185,7 @@ class Relay(Base):
                 ,aType:str
                 ,aIO:str
                 ,aIsHist:bool
-                 ,aHistPeriod:int):
+                ,aHistPeriod:int):
         super().__init__(
                         aBaseDir
                         ,aDbInfo
@@ -165,11 +197,11 @@ class Relay(Base):
                         ,aIO
                         ,aIsHist
                         ,aHistPeriod)
- 
+        self.set_conf(aTable="relay")
         self.calendar=Calendar(self,aTable="relay")
         self.hist=Historify(self,aTable="historify")
         self.init_relay_thread()
-        _logger.debug(f"Relay {self.iIdPin} running in {self.run_mode} mode")
+        _logger.info(f"Relay {self.iIdPin} running in {self.run_mode} mode")
 
     def init_relay_thread(self):
         iTarget=self.main_update_thread
@@ -181,8 +213,10 @@ class Relay(Base):
         while self.application_running:
             self.update_relay_state()
             self.calendar.update_data()
-            self.hist.update_hist()
-            wait(seconds=3)
+            if self.iIsHist:
+                self.hist.update_hist()
+                wait(seconds=self.iHistPeriod)
+            else:wait(seconds=5)
 
     def read(self):
         status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -304,7 +338,7 @@ class Calendar:
             iEndDate=self.endDate
             iActive=self.isActive
             iParams=[iStartDate,iEndDate,iActive,iId]
-            iSql="UPDATE relay SET start_date=%s,end_date=%s,date_active=%s WHERE id = %s"
+            iSql="UPDATE {aTable} SET start_date=%s,end_date=%s,date_active=%s WHERE idpin = %s".format(aTable=self.iTable)
             self.iUnit.iDb.execute(iSql,iParams)
             self.iUnit.iDb.close()
         except Exception as e:
@@ -342,9 +376,6 @@ class Historify:
             iSql="INSERT INTO `{}` (idpin,newstate,ts) VALUES (%s,%s,%s)".format(str(self.iTable))
             self.iUnit.iDb.execute(iSql,iParams)
             self.iUnit.iDb.close()
-            # Debug
-            # iSql=f"INSERT INTO {iParams[0]} (idrelay,newstate,ts) VALUES ('{iParams[1]}','{iParams[2]}','{iParams[3]}')"
-            # _logger.debug(iSql)
         except Exception as e:
             err="Error in Relay.Historify.add_hist function : "+str(sys.exc_info())+" : "+str(e)
             _logger.error(err)
@@ -391,7 +422,6 @@ class BaseHandler:
             err+="Function response: "+str(iRet)
             _logger.error(err)
             raise Exception(err)
-            pass
             
         return iRet
 

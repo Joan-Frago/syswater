@@ -5,7 +5,7 @@ import sys
 from homeMain import RelayHandler,DigitalPinHandler
 
 sys.path.append("/opt/Python-Utils/utils/")
-from utils import Logger,NormDate
+from utils import Logger,NormDate,DataBase
 from api import Api
 
 # Init logger
@@ -65,6 +65,77 @@ def SetCalendar(data,aPin:str):
 
     return {"status":200}
 
+def DisableForcedState(data,aPin:str):
+    try:
+        relay=rl_handler.get_relay(aPin=aPin)
+        relay.forced_state=False
+        return {"status":200}
+    except Exception as e:
+        err="Error in homeApi.py:DisableForcedState function."
+        err+=" Error: "+str(e)
+        err+=" : "+str(sys.exc_info())
+        _logger.error(err)
+
+def SetConf(data):
+    try:
+        if not isinstance(data,dict): raise Exception("data is not dict in SetConf function")
+        iConf=data["iObj"]
+        iIdPin=iConf["idpin"]
+        iType=iConf["type"]
+        iName=iConf["name"]
+        iDesc=iConf["description"]
+        iIsVirtual=iConf["isvirtual"]
+        iIsHist=iConf["ishist"]
+        iHistPeriod=iConf["histperiod"]
+        iIO=iConf["io"]
+
+        if "RO" in iIdPin:
+            iHandler=rl_handler
+            iHandler.get_relay(aPin=iIdPin)
+            iTable="relay"
+        if "DI" in iIdPin:
+            iHandler=dp_handler
+            iHandler.get_digitalpin(aPin=iIdPin)
+            iTable="digitalpin"
+
+        iDb=DataBase(
+            Host=iHandler.iDbInfo["Host"]
+            ,User=iHandler.iDbInfo["User"]
+            ,Password=iHandler.iDbInfo["Password"]
+            ,DataBase=iHandler.iDbInfo["DataBase"]
+            ,buffered=True
+        )
+        iDb.connect()
+        if iDb is None:
+            err=f"Could not connect to bd in homeApi.py:SetConf function"
+            _logger.error(err)
+            pass
+
+        iParams=[str(iName),str(iDesc),str(iIsVirtual)
+                 ,str(iType),str(iIO),str(iIsHist),str(iHistPeriod)
+                 ,str(iIdPin)]
+
+        iSql="UPDATE {aTable} SET".format(aTable=iTable)
+        iSql+=" name=%s"
+        iSql+=", description=%s"
+        iSql+=", isvirtual=%s"
+        iSql+=", type=%s"
+        iSql+=", io=%s"
+        iSql+=", hist=%s"
+        iSql+=", histperiod=%s"
+        iSql+=" WHERE idpin=%s"
+
+        iQuery = iDb.execute(iSql,iParams,DebugMode=False)
+        iDb.close()
+
+        return {"status":200}
+    except Exception as e:
+        err="Error in homeApi.py:SetConf function."
+        err+=" Error: "+str(e)
+        err+=" : "+str(sys.exc_info())
+        _logger.error(err)
+        return {"status":500}
+
 if __name__ == "__main__":
     rl_handler=RelayHandler()
     dp_handler=DigitalPinHandler()
@@ -80,4 +151,6 @@ if __name__ == "__main__":
     _api.add_post_request(r"/api/WriteRelay/(?P<aPin>2\.[1-9])/(?P<aStatus>[0-1])",WriteRelay)
     _api.add_post_request(r"/api/GetCalendar/(?P<aPin>2\.[1-9])",GetCalendar)
     _api.add_post_request(r"/api/SetCalendar/(?P<aPin>2\.[1-9])",SetCalendar)
+    _api.add_post_request(r"/api/DisableForcedState/(?P<aPin>2\.[1-9])",DisableForcedState)
+    _api.add_post_request(r"/api/SetConf",SetConf)
     _api.init_app()
