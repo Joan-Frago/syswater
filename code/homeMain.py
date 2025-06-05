@@ -10,8 +10,7 @@ import subprocess
 import threading
 
 # Personal modules
-sys.path.append("/opt/Python-Utils/utils/")
-from utils import Logger,DataBase,Timer,GetFuncName,GetTime,get_json_data,dict2json,writeFile,wait,GetTimestamp,TimestampTimeDiff
+from pyutils.utils import Logger,DataBase,Timer,GetFuncName,GetTime,get_json_data,dict2json,writeFile,wait,GetTimestamp,TimestampTimeDiff
 
 # Init logger
 _logger=Logger(log_path="/opt/home-auto/log/home.log",enable_rotation=False,max_log_file_size=90)
@@ -432,9 +431,9 @@ class RelayHandler(BaseHandler):
         self.set_relays()
     def set_relays(self):
         iTable="relay"
-        iData=self.get_device_data(aTable=iTable)
+        iData=self.get_device_data(aTable=iTable) # all db registers of relay table
         for i in range(len(iData)):
-            rl_info=iData[i]
+            rl_info=iData[i] # db register for each ipin
             self.relays[rl_info["idpin"]]=Relay(aBaseDir=self.unipi_sys_base_dir
                                                 ,aDbInfo=self.iDbInfo
                                                 ,aPin=rl_info["idpin"]
@@ -448,6 +447,15 @@ class RelayHandler(BaseHandler):
                                                 )
     
     def get_relay(self,aPin:str):
+        try:
+            return self.relays[aPin]
+        except Exception as e:
+            err="Error in RelayHandler.get_relay function trying to get relay "
+            err+=str(aPin)
+            err+=": Error: "
+            err+=str(e)+" : "
+            err+=str(sys.exc_info())
+            _logger.error(err)
         match aPin:
             case "2.1":return self.relays["RO2.1"]
             case "2.2":return self.relays["RO2.2"]

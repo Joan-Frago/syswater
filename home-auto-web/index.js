@@ -41,7 +41,7 @@ function constructHtml() {
 
     const pTitle = document.createElement("p");
     pTitle.className = "p-pin-title";
-    pTitle.textContent = `Relay ${iPin}`;
+    pTitle.textContent = `${iPin}`;
     divPin.appendChild(pTitle);
 
     const divState = document.createElement("div");
@@ -65,13 +65,13 @@ function constructHtml() {
     const btnUp = document.createElement("button");
     btnUp.className = "btn-pin-state-change btn-pin-state-change-up";
     btnUp.textContent = "UP";
-    btnUp.onclick = () => fetch_state_change(iPin, 1);
+    btnUp.onclick = () => fetch_state_change(iIdPin, 1);
     divStateChange.appendChild(btnUp);
 
     const btnDown = document.createElement("button");
     btnDown.className = "btn-pin-state-change btn-pin-state-change-down";
     btnDown.textContent = "DOWN";
-    btnDown.onclick = () => fetch_state_change(iPin, 0);
+    btnDown.onclick = () => fetch_state_change(iIdPin, 0);
     divStateChange.appendChild(btnDown);
 
     const btnReset = document.createElement("button");
@@ -83,7 +83,7 @@ function constructHtml() {
     divState.appendChild(divStateChange);
 
     const divError = document.createElement("div");
-    divError.id = `error-${iPin}`;
+    divError.id = `error-${iIdPin}`;
     divState.appendChild(divError);
 
     divPin.appendChild(divState);
@@ -162,18 +162,31 @@ function constructHtml() {
   }
 }
 
-function fetchPinStates() {
+function GetPinsData() {
   let iRoute = `http://${api_ip}:${api_port}/api/ReadAllPins`;
   fetch(iRoute)
     .then(response => response.json()) // Convert response to JSON
     .then(data => {
       data.pins.forEach((pin) => {
         // establir estat del pin per cada div
-        const p_pin_state = document.getElementById(`p-pin-state-${pin.id}`)
+        const p_pin_state = document.getElementById(`p-pin-state-${pin.id}`);
         // afegir atribut
-        p_pin_state.setAttribute("class", `id-pin-state-${pin.state.toLowerCase()} p-pin-state`)
-        p_pin_state.innerHTML = ""
-        p_pin_state.innerHTML = `${pin.state === "1" ? "UP" : "DOWN"}`
+        p_pin_state.setAttribute("class", `id-pin-state-${pin.state.toLowerCase()} p-pin-state`);
+        p_pin_state.innerHTML = "";
+        p_pin_state.innerHTML = `${pin.state === "1" ? "UP" : "DOWN"}`;
+
+        let iName=pin.name;
+        let iDesc=pin.desc;
+        let iIsVirtual=pin.isvirtual;
+        let iType=pin.type;
+        let iIO=pin.io;
+        let iIsHist=pin.ishist;
+        let iHistPeriod=pin.histperiod;
+        let iRunMode=pin.runmode;
+        let iForcedValue=pin.forcedvalue;
+
+        // console.log("pin: ",pin.id," state: ",pin.state," name: ",iName," desc: ",iDesc," isvirtual: ",iIsVirtual," type: ",iType," io: ",iIO," ishist: ",iIsHist," histperiod: ",iHistPeriod," runmode: ",iRunMode," forcedvalue: ",iForcedValue);
+
 
       });
     })
@@ -188,30 +201,31 @@ function fetchPinStates() {
     });
 }
 
-function fetch_state_change(pin, state) {
-  if (state != 0 && state != 1) {
+function fetch_state_change(iIdPin, iState) {
+  if (iState != 0 && iState != 1) {
     // not valid
-    console.log("Invalid state in fetch_state_change: ", state)
+    console.log("Invalid state in fetch_state_change: ", iState)
     return;
   }
-  let iRoute = `http://${api_ip}:${api_port}/api/WriteRelay/${pin}/${state}`;
+  let iObj={
+    pin: iIdPin
+    ,newstate: iState
+  };
+  let iRoute = `http://${api_ip}:${api_port}/api/WriteRelay`;
   fetch(iRoute, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ iObj }),
   })
     .then(response => {
       if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
-      fetchPinStates();
+      GetPinsData();
       return response.json();
     })
-    .then((data) => {
-      console.log("Relay state changed successfully:", data);
-    })
     .catch(error => {
-      const container = document.getElementById(`error-${pin}`);
+      const container = document.getElementById(`error-${iIdPin}`);
       container.innerHTML = `
         <p class="error-message">Failed in api call. Please try again later.</p>
         <p class="error-message">Error:</p><p>${error}</p>
@@ -250,7 +264,7 @@ function CalendarSubmit(event, aPin) {
   })
     .then(response => {
       if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
-      fetchPinStates();
+      GetPinsData();
       return response.json();
     })
     .catch(error => {
@@ -274,7 +288,7 @@ function disable_forced_state(aPin) {
   })
     .then(response => {
       if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
-      fetchPinStates();
+      GetPinsData();
     })
     .catch(error => {
       const container = document.getElementById(`error-${aPin}`);
@@ -288,7 +302,7 @@ function disable_forced_state(aPin) {
 }
 setData().then(() => {
   constructHtml();
-  fetchPinStates();
-  setInterval(fetchPinStates, 5000);
+  GetPinsData();
+  setInterval(GetPinsData, 5000);
 });
 
