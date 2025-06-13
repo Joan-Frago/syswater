@@ -163,15 +163,22 @@ class DigitalPin(Base):
             self.hist.add_hist(new_pin_state=1)
 
     def read(self):
-        status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        if status.returncode != 0:
-            err = f"Error {status.returncode} : {status.stderr.decode().strip()}"
+            if status.returncode != 0:
+                err = f"Error {status.returncode} : {status.stderr.decode().strip()}"
+                _logger.error(err)
+                raise Exception(err)
+            else:
+                data={"id":self.iIdPin,"state":str(status.stdout.decode().strip())}
+                return data
+        except Exception as e:
+            err="Could not read pin --{pin}-- value : DigitalPin.read func : Error --> ".format(pin=self.iIdPin)
+            err+=str(e)+" : "+str(sys.exc_info())
             _logger.error(err)
-            return err
-        else:
-            data={"id":self.iIdPin,"state":str(status.stdout.decode().strip())}
-            return data
+            raise Exception(err)
+
 
 class Relay(Base):
     def __init__(self
@@ -218,15 +225,21 @@ class Relay(Base):
             else:wait(seconds=5)
 
     def read(self):
-        status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        if status.returncode != 0:
-            err = f"Error {status.returncode} : {status.stderr.decode().strip()}"
+            if status.returncode != 0:
+                err = f"Error {status.returncode} : {status.stderr.decode().strip()}"
+                _logger.error(err)
+                raise Exception(err)
+            else:
+                data={"id":self.iIdPin,"state":str(status.stdout.decode().strip())}
+                return data
+        except Exception as e:
+            err="Could not read pin --{pin}-- value : Relay.read func : Error --> ".format(pin=self.iIdPin)
+            err+=str(e)+" : "+str(sys.exc_info())
             _logger.error(err)
-            return err
-        else:
-            data={"id":self.iIdPin,"state":str(status.stdout.decode().strip())}
-            return data
+            raise Exception(err)
     
     def write(self,newState:int):
         """
