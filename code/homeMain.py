@@ -164,15 +164,20 @@ class DigitalPin(Base):
 
     def read(self):
         try:
-            status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-            if status.returncode != 0:
-                err = f"Error {status.returncode} : {status.stderr.decode().strip()}"
-                _logger.error(err)
-                raise Exception(err)
+            iDir=f"{self.unipi_sys_base_dir}{self.iIdPin}/value"
+            if os.path.exists(iDir):
+                status = subprocess.run(["cat", f"{self.unipi_sys_base_dir}{self.iIdPin}/value"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                
+                if status.returncode != 0:
+                    err = f"Error {status.returncode} : {status.stderr.decode().strip()}"
+                    _logger.error(err)
+                    raise Exception(err)
+                else:
+                    data={"id":self.iIdPin,"state":str(status.stdout.decode().strip())}
+                    return data
             else:
-                data={"id":self.iIdPin,"state":str(status.stdout.decode().strip())}
-                return data
+                raise Exception(f"Trying to read {iDir}, but it does not exist")
+
         except Exception as e:
             err="Could not read pin --{pin}-- value : DigitalPin.read func : Error --> ".format(pin=self.iIdPin)
             err+=str(e)+" : "+str(sys.exc_info())
