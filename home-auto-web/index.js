@@ -16,298 +16,308 @@ let api_ip = "";
 let api_port = "";
 
 async function setData() {
-  return fetch('http://127.0.0.1/home/config/conf.json')
-    .then((response) => response.json())
-    .then((config) => {
-      api_ip = config.config.api_ip;
-      api_port = config.config.api_port;
-    })
-    .catch((error) => {
-      console.error("Error fetching config json file: ", error);
-    })
+	return fetch('http://127.0.0.1/home/config/conf.json')
+		.then((response) => response.json())
+		.then((config) => {
+			api_ip = config.config.api_ip;
+			api_port = config.config.api_port;
+		})
+		.catch((error) => {
+			console.error("Error fetching config json file: ", error);
+		})
 }
 
 function constructHtml(aId,aPinType,aState,aName,aDesc,aIsVirtual,aType,aIO,aIsHist,aHistPeriod,aRunMode,aForcedValue){
-  iGenDiv = document.getElementById("pins-container");
+	iGenDiv = document.getElementById("pins-container");
 
-  const divPin = document.createElement("div");
-  divPin.className = "div-pin";
+	const divPin = document.createElement("div");
+	divPin.className = "div-pin";
 
-  const pTitle = document.createElement("p");
-  pTitle.className = "p-pin-title";
-  pTitle.textContent = `${aName}`;
-  divPin.appendChild(pTitle);
+	const pTitle = document.createElement("p");
+	pTitle.className = "p-pin-title";
+	pTitle.textContent = `${aName}`;
+	divPin.appendChild(pTitle);
 
-  const pSubtitle=document.createElement("p");
-  pSubtitle.className="p-pin-sbtl";
-  pSubtitle.textContent=`${aDesc}`;
-  divPin.appendChild(pSubtitle);
+	const pSubtitle=document.createElement("p");
+	pSubtitle.className="p-pin-sbtl";
 
-  const divState = document.createElement("div");
-  divState.className = "div-pin-state";
+	if(aDesc=="null"){
+		aDesc = "";
+	}
+	pSubtitle.textContent=`${aDesc}`;
+	divPin.appendChild(pSubtitle);
 
-  const pState = document.createElement("p");
-  pState.className = "p-pin-state";
-  pState.id = `p-pin-state-${aId}`;
-  pState.textContent = "UNDEFINED";
-  divState.appendChild(pState);
+	const divState = document.createElement("div");
+	divState.className = "div-pin-state";
 
-  if(aPinType=="Relay"){
-    const divStateChange = document.createElement("div");
-    divStateChange.className = "div-pin-state-change";
+	const pState = document.createElement("p");
+	pState.className = "p-pin-state";
+	pState.id = `p-pin-state-${aId}`;
+	pState.textContent = "UNDEFINED";
+	divState.appendChild(pState);
 
-    const stateTitle = document.createElement("span");
-    const h3 = document.createElement("h3");
-    h3.textContent = "Forçar valor";
-    stateTitle.appendChild(h3);
-    divStateChange.appendChild(stateTitle);
+	if(aPinType=="Relay"){
+		const divStateChange = document.createElement("div");
+		divStateChange.className = "div-pin-state-change";
 
-    const btnUp = document.createElement("button");
-    btnUp.className = "btn-pin-state-change btn-pin-state-change-up";
-    btnUp.textContent = "UP";
-    btnUp.onclick = () => fetch_state_change(aId, 1);
-    divStateChange.appendChild(btnUp);
+		const h3 = document.createElement("h3");
+		h3.textContent = "Forçar valor";
+		divStateChange.appendChild(h3);
 
-    const btnDown = document.createElement("button");
-    btnDown.className = "btn-pin-state-change btn-pin-state-change-down";
-    btnDown.textContent = "DOWN";
-    btnDown.onclick = () => fetch_state_change(aId, 0);
-    divStateChange.appendChild(btnDown);
+		const control_buttons = document.createElement("div");
+		control_buttons.className = "pin-state-control-buttons"
 
-    const btnReset = document.createElement("button");
-    btnReset.className = "btn-reset-forced-state";
-    btnReset.textContent = "Desactivar valor forçat";
-    btnReset.onclick = () => disable_forced_state(aId);
-    divStateChange.appendChild(btnReset);
+		divStateChange.appendChild(control_buttons);
 
-    divState.appendChild(divStateChange);
-  }
+		const btnUp = document.createElement("button");
+		btnUp.className = "btn-pin-state-change btn-pin-state-change-up";
+		btnUp.textContent = "UP";
+		btnUp.onclick = () => fetch_state_change(aId, 1);
+		control_buttons.appendChild(btnUp);
 
-  const divError = document.createElement("div");
-  divError.id = `error-${aId}`;
-  divState.appendChild(divError);
+		const btnDown = document.createElement("button");
+		btnDown.className = "btn-pin-state-change btn-pin-state-change-down";
+		btnDown.textContent = "DOWN";
+		btnDown.onclick = () => fetch_state_change(aId, 0);
+		control_buttons.appendChild(btnDown);
 
-  divPin.appendChild(divState);
+		const btnReset = document.createElement("button");
+		btnReset.className = "btn-pin-state-change";
+		btnReset.textContent = "Auto";
+		btnReset.onclick = () => disable_forced_state(aId);
+		control_buttons.appendChild(btnReset);
 
-  const divCalendar = document.createElement("div");
-  divCalendar.className = "div-calendar";
+		divState.appendChild(divStateChange);
 
-  const pCalendar = document.createElement("p");
-  pCalendar.className = "p-calendar";
-  pCalendar.textContent = "Calendari";
-  divCalendar.appendChild(pCalendar);
+		divPin.appendChild(divState)
 
-  const form = document.createElement("form");
-  form.id = `calendar-form-${aId}`;
-  form.onsubmit = (event) => CalendarSubmit(event, aId);
+		const divCalendar = document.createElement("div");
+		divCalendar.className = "div-calendar";
 
-  const selectorDiv = document.createElement("div");
-  selectorDiv.className = "div-calendar-selector";
+		const pCalendar = document.createElement("p");
+		pCalendar.className = "p-calendar";
+		pCalendar.textContent = "Calendari";
+		divCalendar.appendChild(pCalendar);
 
-  const divActive = document.createElement("div");
-  const labelActive = document.createElement("label");
-  labelActive.setAttribute("for", `iIsActive-${aId}`);
-  labelActive.innerHTML = "<span>Calendari Actiu</span>";
+		const form = document.createElement("form");
+		form.id = `calendar-form-${aId}`;
+		form.onsubmit = (event) => CalendarSubmit(event, aId);
 
-  const inputActive = document.createElement("input");
-  inputActive.type = "checkbox";
-  inputActive.id = `iIsActive-${aId}`;
-  inputActive.name = "iIsActive";
+		const selectorDiv = document.createElement("div");
+		selectorDiv.className = "div-calendar-selector";
 
-  divActive.appendChild(labelActive);
-  divActive.appendChild(inputActive);
+		const divActive = document.createElement("div");
+		const labelActive = document.createElement("label");
+		labelActive.setAttribute("for", `iIsActive-${aId}`);
+		labelActive.innerHTML = "<span>Calendari Actiu</span>";
 
-  const divStart = document.createElement("div");
-  const labelStart = document.createElement("label");
-  labelStart.setAttribute("for", `iStartDate-${aId}`);
-  labelStart.innerHTML = "<span>Data d'inici</span>";
+		const inputActive = document.createElement("input");
+		inputActive.type = "checkbox";
+		inputActive.id = `iIsActive-${aId}`;
+		inputActive.name = "iIsActive";
 
-  const inputStart = document.createElement("input");
-  inputStart.type = "datetime-local";
-  inputStart.id = `iStartDate-${aId}`;
-  inputStart.name = "iStartDate";
+		divActive.appendChild(labelActive);
+		divActive.appendChild(inputActive);
 
-  divStart.appendChild(labelStart);
-  divStart.appendChild(inputStart);
+		const divStart = document.createElement("div");
+		const labelStart = document.createElement("label");
+		labelStart.setAttribute("for", `iStartDate-${aId}`);
+		labelStart.innerHTML = "<span>Data d'inici</span>";
 
-  const divEnd = document.createElement("div");
-  const labelEnd = document.createElement("label");
-  labelEnd.setAttribute("for", `iEndDate-${aId}`);
-  labelEnd.innerHTML = "<span>Data final</span>";
+		const inputStart = document.createElement("input");
+		inputStart.type = "datetime-local";
+		inputStart.id = `iStartDate-${aId}`;
+		inputStart.name = "iStartDate";
 
-  const inputEnd = document.createElement("input");
-  inputEnd.type = "datetime-local";
-  inputEnd.id = `iEndDate-${aId}`;
-  inputEnd.name = "iEndDate";
+		divStart.appendChild(labelStart);
+		divStart.appendChild(inputStart);
 
-  divEnd.appendChild(labelEnd);
-  divEnd.appendChild(inputEnd);
+		const divEnd = document.createElement("div");
+		const labelEnd = document.createElement("label");
+		labelEnd.setAttribute("for", `iEndDate-${aId}`);
+		labelEnd.innerHTML = "<span>Data final</span>";
 
-  selectorDiv.appendChild(divActive);
-  selectorDiv.appendChild(divStart);
-  selectorDiv.appendChild(divEnd);
+		const inputEnd = document.createElement("input");
+		inputEnd.type = "datetime-local";
+		inputEnd.id = `iEndDate-${aId}`;
+		inputEnd.name = "iEndDate";
 
-  form.appendChild(selectorDiv);
+		divEnd.appendChild(labelEnd);
+		divEnd.appendChild(inputEnd);
 
-  const btnSubmit = document.createElement("button");
-  btnSubmit.type = "submit";
-  btnSubmit.className = "btn-submit-calendar";
-  btnSubmit.textContent = "Send Data";
+		selectorDiv.appendChild(divActive);
+		selectorDiv.appendChild(divStart);
+		selectorDiv.appendChild(divEnd);
 
-  form.appendChild(btnSubmit);
-  divCalendar.appendChild(form);
+		const btnSubmit = document.createElement("button");
+		btnSubmit.type = "submit";
+		btnSubmit.className = "btn-submit-calendar";
+		btnSubmit.textContent = "Send Data";
 
-  divPin.appendChild(divCalendar);
+		form.appendChild(btnSubmit);
+		divCalendar.appendChild(form);
 
-  iGenDiv.appendChild(divPin);
+		divPin.appendChild(divCalendar);
+		form.appendChild(selectorDiv);
+
+	}
+	else{
+		divPin.appendChild(divState);
+	}
+
+	const divError = document.createElement("div");
+	divError.id = `error-${aId}`;
+	divState.appendChild(divError);
+
+	iGenDiv.appendChild(divPin);
 }
 
 function GetPinsData() {
-  let iRoute = `http://${api_ip}:${api_port}/api/ReadAllPins`;
-  fetch(iRoute)
-    .then(response => response.json()) // Convert response to JSON
-    .then(data => {
-      data.pins.forEach((pin) => {
-        
-        let iId=pin.id;
-        let iPinType=pin.pintype
-        let iState=pin.state;
-        let iName=pin.name;
-        let iDesc=pin.desc;
-        let iIsVirtual=pin.isvirtual;
-        let iType=pin.type;
-        let iIO=pin.io=="1" ? "Input" : "Output";
-        let iIsHist=pin.ishist;
-        let iHistPeriod=pin.histperiod;
-        let iRunMode=pin.runmode;
-        let iForcedValue=pin.forcedvalue;
-        
-        if(document.getElementById(`p-pin-state-${iId}`)==null){
-          constructHtml(iId,iPinType,iState,iName,iDesc,iIsVirtual,iType,iIO
-            ,iIsHist,iHistPeriod,iRunMode,iForcedValue);
-        }
+	let iRoute = `http://${api_ip}:${api_port}/api/ReadAllPins`;
+	fetch(iRoute)
+		.then(response => response.json()) // Convert response to JSON
+		.then(data => {
+			data.pins.forEach((pin) => {
 
-        // establir estat del pin per cada div
-        const p_pin_state = document.getElementById(`p-pin-state-${iId}`);
-        // afegir atribut
-        p_pin_state.setAttribute("class", `id-pin-state-${iState.toLowerCase()} p-pin-state`);
-        p_pin_state.innerHTML = "";
-        p_pin_state.innerHTML = `${iState === "1" ? "UP" : "DOWN"}`;
+				let iId=pin.id;
+				let iPinType=pin.pintype
+				let iState=pin.state;
+				let iName=pin.name;
+				let iDesc=pin.desc;
+				let iIsVirtual=pin.isvirtual;
+				let iType=pin.type;
+				let iIO=pin.io=="1" ? "Input" : "Output";
+				let iIsHist=pin.ishist;
+				let iHistPeriod=pin.histperiod;
+				let iRunMode=pin.runmode;
+				let iForcedValue=pin.forcedvalue;
 
-      });
-    })
-    .catch(error => {
-      const container = document.getElementById("pins-container");
-      container.innerHTML = `
-        <p class="error-message">Failed to load pin states. Please try again later.</p>
-        <p class="error-message">Error:</p><p>${error}</p>
-      `;
+				if(document.getElementById(`p-pin-state-${iId}`)==null){
+					constructHtml(iId,iPinType,iState,iName,iDesc,iIsVirtual,iType,iIO
+						,iIsHist,iHistPeriod,iRunMode,iForcedValue);
+				}
 
-      console.error("Error fetching pin states:", error);
-    });
+				// establir estat del pin per cada div
+				const p_pin_state = document.getElementById(`p-pin-state-${iId}`);
+				// afegir atribut
+				p_pin_state.setAttribute("class", `id-pin-state-${iState.toLowerCase()} p-pin-state`);
+				p_pin_state.innerHTML = "";
+				p_pin_state.innerHTML = `${iState === "1" ? "UP" : "DOWN"}`;
+
+			});
+		})
+		.catch(error => {
+			const container = document.getElementById("pins-container");
+			container.innerHTML = `
+<p class="error-message">Failed to load pin states. Please try again later.</p>
+<p class="error-message">Error:</p><p>${error}</p>
+`;
+
+			console.error("Error fetching pin states:", error);
+		});
 }
 
 function fetch_state_change(iIdPin, iState) {
-  if (iState != 0 && iState != 1) {
-    // not valid
-    console.log("Invalid state in fetch_state_change: ", iState)
-    return;
-  }
-  let iObj={
-    pin: iIdPin
-    ,newstate: iState
-  };
-  let iRoute = `http://${api_ip}:${api_port}/api/write-to-pin`;
-  fetch(iRoute, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ iObj }),
-  })
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
-      GetPinsData();
-      return response.json();
-    })
-    .catch(error => {
-      const container = document.getElementById(`error-${iIdPin}`);
-      container.innerHTML = `
-        <p class="error-message">Failed in api call. Please try again later.</p>
-        <p class="error-message">Error:</p><p>${error}</p>
-      `;
+	if (iState != 0 && iState != 1) {
+		// not valid
+		console.log("Invalid state in fetch_state_change: ", iState)
+		return;
+	}
+	let iObj={
+		pin: iIdPin
+		,newstate: iState
+	};
+	let iRoute = `http://${api_ip}:${api_port}/api/write-to-pin`;
+	fetch(iRoute, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ iObj }),
+	})
+		.then(response => {
+			if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
+			GetPinsData();
+			return response.json();
+		})
+		.catch(error => {
+			const container = document.getElementById(`error-${iIdPin}`);
+			container.innerHTML = `
+<p class="error-message">Failed in api call. Please try again later.</p>
+<p class="error-message">Error:</p><p>${error}</p>
+`;
 
-      console.error("Error calling api to change relay state:", error);
-    });
+			console.error("Error calling api to change relay state:", error);
+		});
 }
 function CalendarSubmit(event, aPin) {
-  event.preventDefault();
+	event.preventDefault();
 
-  const iForm = document.getElementById(`calendar-form-${aPin}`);
-  const iData = new FormData(iForm);
-  var iIsActive = iData.get("iIsActive");
-  var iStartDate = iData.get("iStartDate"); // attr name of the input
-  var iEndDate = iData.get("iEndDate");
+	const iForm = document.getElementById(`calendar-form-${aPin}`);
+	const iData = new FormData(iForm);
+	var iIsActive = iData.get("iIsActive");
+	var iStartDate = iData.get("iStartDate"); // attr name of the input
+	var iEndDate = iData.get("iEndDate");
 
-  iIsActive = (iIsActive == null) ? "0" : "1";
+	iIsActive = (iIsActive == null) ? "0" : "1";
 
-  let iObj = {
-    pin: aPin
-    , calendar: {
-      is_active: iIsActive
-      , start_date: iStartDate
-      , end_date: iEndDate
-    }
-  };
+	let iObj = {
+		pin: aPin
+		, calendar: {
+			is_active: iIsActive
+			, start_date: iStartDate
+			, end_date: iEndDate
+		}
+	};
 
-  let iRoute = `http://${api_ip}:${api_port}/api/SetCalendar/${aPin}`;
-  fetch(iRoute, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ iObj }),
-  })
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
-      GetPinsData();
-      return response.json();
-    })
-    .catch(error => {
-      const container = document.getElementById(`error-${aPin}`);
-      container.innerHTML = `
-        <p class="error-message">Failed in api call. Please try again later.</p>
-        <p class="error-message">Error:</p><p>${error}</p>
-      `;
+	let iRoute = `http://${api_ip}:${api_port}/api/SetCalendar/${aPin}`;
+	fetch(iRoute, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ iObj }),
+	})
+		.then(response => {
+			if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
+			GetPinsData();
+			return response.json();
+		})
+		.catch(error => {
+			const container = document.getElementById(`error-${aPin}`);
+			container.innerHTML = `
+<p class="error-message">Failed in api call. Please try again later.</p>
+<p class="error-message">Error:</p><p>${error}</p>
+`;
 
-      console.error("Error calling api to change relay state:", error);
-    });
+			console.error("Error calling api to change relay state:", error);
+		});
 }
 function disable_forced_state(aPin) {
-  let iRoute = `http://${api_ip}:${api_port}/api/DisableForcedState/${aPin}`;
-  fetch(iRoute, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({}),
-  })
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
-      GetPinsData();
-    })
-    .catch(error => {
-      const container = document.getElementById(`error-${aPin}`);
-      container.innerHTML = `
-        <p class="error-message">Could not disable forced mode.</p>
-        <p class="error-message">Error:</p><p>${error}</p>
-      `;
+	let iRoute = `http://${api_ip}:${api_port}/api/DisableForcedState/${aPin}`;
+	fetch(iRoute, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({}),
+	})
+		.then(response => {
+			if (!response.ok) throw new Error(`HTTP error. status: ${response.status}`);
+			GetPinsData();
+		})
+		.catch(error => {
+			const container = document.getElementById(`error-${aPin}`);
+			container.innerHTML = `
+<p class="error-message">Could not disable forced mode.</p>
+<p class="error-message">Error:</p><p>${error}</p>
+`;
 
-      console.error("Error disabling forced mode in disable_forced_state function. Error: ", error);
-    });
+			console.error("Error disabling forced mode in disable_forced_state function. Error: ", error);
+		});
 }
 setData().then(() => {
-  GetPinsData();
-  setInterval(GetPinsData, 5000);
+	GetPinsData();
+	setInterval(GetPinsData, 5000);
 });
 

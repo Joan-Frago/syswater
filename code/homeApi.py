@@ -107,7 +107,10 @@ def SetCalendar(data,aPin:str):
         _logger.error(str(err))
         return {"status":460,"error":str(err)}
     
-    relay:Relay=rl_handler.get_relay(aPin)
+    relay:Relay|None = rl_handler.get_relay(aPin)
+    if relay is None:
+        raise Exception(f"In SetCalendar function: rl_handler.get_relay(aPin) where aPin={aPin} returned None")
+
     iDic=data["iObj"]["calendar"]
     cal_active=iDic["is_active"]
     start_date=NormDate(iDic["start_date"])
@@ -126,7 +129,10 @@ def SetCalendar(data,aPin:str):
 
 def DisableForcedState(data,aPin:str):
     try:
-        relay=rl_handler.get_relay(aPin=aPin)
+        relay:Relay|None = rl_handler.get_relay(aPin=aPin)
+        if relay is None:
+            raise Exception(f"In DisableForcedState function: rl_handler.get_relay(aPin) where aPin={aPin} returned None")
+
         relay.forced_state=False
         return {"status":200}
     except Exception as e:
@@ -152,14 +158,17 @@ def SetConf(data):
 
         if "RO" in iIdPin:
             iHandler=rl_handler
-            iPinObj:Relay = iHandler.get_relay(aPin=iIdPin)
+            iPinObj:Relay|None = iHandler.get_relay(aPin=iIdPin)
             iTable="relay"
         if "DI" in iIdPin:
             iHandler=dp_handler
-            iPinObj:DigitalPin = iHandler.get_digitalpin(aPin=iIdPin)
+            iPinObj:DigitalPin|None = iHandler.get_digitalpin(aPin=iIdPin)
             iTable="digitalpin"
         else:
             raise Exception("Can't read pin {idpin}: Unrecongnized pin type".format(idpin=iIdPin))
+
+        if iPinObj is None:
+            raise Exception(f"In SetConf function: trying to get pin object for pin {iIdPin} returned None")
 
         iDb=DataBase(
             Host=iHandler.iDbInfo["Host"]
@@ -196,7 +205,6 @@ def SetConf(data):
              , "type": str(iType), "io": str(iIO), "hist": str(iIsHist)
              , "histperiod": str(iHistPeriod)}
         )
-
 
         return {"status":200}
     except Exception as e:

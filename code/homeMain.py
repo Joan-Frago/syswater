@@ -77,7 +77,7 @@ class Base:
             err="Error in Base.set_conf function. Error: "+str(e)+" : "+str(sys.exc_info())
             _logger.error(err)
 
-    def update_vars(self, vars:dict):
+    def update_vars(self, vars:dict) -> None:
         """
         @Params
         * vars: dict

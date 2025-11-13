@@ -129,30 +129,33 @@ nav {
 }
 
 .btn-pin-state-change {
-	width: 40%;
+	width: 30%;
 	border: none;
 	padding: 0.4em;
 	border-radius: 5px;
 	color: #fff;
 	cursor: pointer;
+	background-color: #6666ff;
+}
+
+.btn-pin-state-change:hover {
+	background-color: #000;
+	transition: 0.5s;
 }
 
 .btn-pin-state-change-up {
 	background-color: #068c08;
 }
 
-.btn-pin-state-change-up:hover {
-	background-color: #000;
-	transition: 0.5s;
-}
-
 .btn-pin-state-change-down {
 	background-color: #f00;
 }
 
-.btn-pin-state-change-down:hover {
-	background-color: #000;
-	transition: 0.5s;
+.pin-state-control-buttons {
+	display: flex;
+	justify-content: space-evenly;
+	flex-wrap: wrap;
+	flex-direction: row;
 }
 
 .p-calendar {
