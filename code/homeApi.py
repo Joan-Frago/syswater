@@ -1,7 +1,6 @@
 import sys
 
 from homeMain import RelayHandler,DigitalPinHandler,DigitalPin,Relay
-from homeCustom import Persiana
 
 from pyutils.utils import Logger,NormDate,DataBase
 from pyutils.api import Api
@@ -224,8 +223,10 @@ def novaPersiana(data):
         relay = rl_handler.get_relay(rl_idpin)
         diinput = dp_handler.get_digitalpin(dp_idpin)
 
-        persiana = Persiana(relay,diinput)
-        persiana.run()
+        if relay is None or diinput is None:
+            raise Exception("Could not find relay or digitalpin")
+
+        diinput.ass_relay = relay
 
         return baseResponse(200,False,error_description="",response="Nova persiana creada correctament",received=data)
 

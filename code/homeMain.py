@@ -117,7 +117,7 @@ class DigitalPin(Base):
         self.init_digital_thread()
         _logger.info(f"Digital Pin {self.iIdPin} running in {self.run_mode} mode")
 
-        self.start_relay = False
+        self.ass_relay:Relay|None = None
 
     def init_digital_thread(self):
         iTarget=self.main_digital_thread
@@ -138,25 +138,30 @@ class DigitalPin(Base):
                 wait(seconds=int(self.iHistPeriod))
             else: wait(seconds=10)
     def master_thread(self):
-        iMasterTimeLimit=5 # Number of seconds to wait
-        running=True
-        iCounter=0
-        iLastTime=GetEpochTimestamp()
-        while running:
-            iTime=GetEpochTimestamp()
-            time_diff=TimestampTimeDiff(iLastTime,iTime)
-            if time_diff<iMasterTimeLimit:
-                if iCounter>=3:
-                    # AQUI S'HAURIA D'ENCENDRE UN RELÉ
-                    self.start_relay = True
-                    wait(20)
-                    running=False
+        """
+        Master Thread requires a relay to be associated to this digital pin input
+        """
+        if self.ass_relay is not None:
+            iMasterTimeLimit=10 # Number of seconds to wait
+            running=True
+            iCounter=0
+            iLastTime=GetEpochTimestamp()
+            while running:
+                iTime=GetEpochTimestamp()
+                time_diff=TimestampTimeDiff(iLastTime,iTime)
+                if time_diff<iMasterTimeLimit:
+                    if iCounter>=3:
+                        # Aquí s'hauria d'encendre un Relay
+                        self.ass_relay.write(newState=1)
+                        wait(20)
+                        running=False
+                    else:
+                        iValue=int(self.read()["state"])
+                        if iValue==1:iCounter+=1
                 else:
-                    iValue=int(self.read()["state"])
-                    if iValue==1:iCounter+=1
-            else:
-                wait(seconds=1)
-            iLastTime=iTime
+                    wait(seconds=1)
+                    iCounter = 0
+                iLastTime=iTime
         if self.iIsHist:
             # historifico el pin digital
             self.hist.add_hist(new_pin_state=1)
