@@ -1,5 +1,7 @@
 #define UNIPI_SYS_BASE_DIR "/sys/unipi-sys/"
 
+void *core(void*);
+
 struct Relay{
 	char *id_pin; // e.g. RO2.1
 	char *pin; // e.g. 2.1

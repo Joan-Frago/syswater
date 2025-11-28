@@ -5,17 +5,46 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "../inc/tcp_server.h"
 #include "../inc/unipi_control.h"
 
-int foo();
+int set_devices(void);
 
 int main(){
-	return start_tcp_server();
+	printf("Application PID is %ld\n\n",(long)getpid());
+
+	// Set all devices before running (read from db and init Devices (Relay or Digital Input or Both))
+	set_devices();
+
+	// Start a new thread for each functionality
+	pthread_t core_thread;
+	pthread_create(&thread, NULL, core, NULL);
+
+	pthread_t tcp_server_thread;
+	pthread_create(&tcp_server_thread, NULL, start_tcp_server, NULL);
+
+	pthread_join(core_thread, NULL);
+	pthread_join(tcp_server_thread);
+
+	return 0;
 }
 
-int start_tcp_server(){
+int set_devices(){
+	// Set all devices before running
+	// Read from db and init Devices
+	// Each Device:
+	// 		1 Relay
+	// 		1 Digital Input
+	// 		1 Relay and 1 Digital Input
+
+	return 0;
+}
+
+void *start_tcp_server(void* arg){
+	printf("Server Thread ID is %lu\n",(unsigned long)pthread_self());
+
 	int sockfd, new_sockfd;
 	struct sockaddr_in server_addr;
 	struct sockaddr_in remote_addr;
@@ -51,9 +80,7 @@ int start_tcp_server(){
 	char *address = inet_ntoa(server_addr.sin_addr);
 	int port = ntohs(server_addr.sin_port);
 
-	// Console messages
 	printf("Server listening on address %s port %d\n",address,port);
-	printf("Server PID is %ld\n\n",(long)getpid());
 
 	for(;;){
 		new_sockfd = accept(sockfd, (struct sockaddr *)&remote_addr, &addrlen);
@@ -89,9 +116,6 @@ int start_tcp_server(){
 			strncat(resp_buf, recv_buf, MESSAGE_SIZE);
 			printf("%s",resp_buf);
 
-			// Business logic
-			foo();
-
 			// Send a response
 			send(new_sockfd, resp_buf, strlen(resp_buf), 0);
 		}
@@ -105,7 +129,9 @@ int start_tcp_server(){
 	return 0;
 }
 
-int foo(){
+void *core(void* arg){
+	printf("Core Thread ID is %lu\n\n",(unsigned long)pthread_self());
+
 	// Relay
 	struct Relay rl;
 	rl.id_pin = "RO2.1";
