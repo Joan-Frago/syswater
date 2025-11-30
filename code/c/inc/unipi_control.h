@@ -1,3 +1,4 @@
+#define MAX_DEVICES 24
 
 void *core(void*);
 
@@ -15,3 +16,8 @@ struct DigitalInput{
 };
 
 int digital_read(struct DigitalInput *, int *);
+
+struct Device{
+	struct Relay *rl;
+	struct DigitalInput *di;
+};
