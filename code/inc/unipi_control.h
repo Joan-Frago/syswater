@@ -34,13 +34,14 @@ typedef struct Fire_Device{
 } fire_device_t;
 
 typedef struct Device{
+	int id;
 	char *name;
 	char *description;
-	historify_t *hist;
+	historify_t hist;
 	fire_device_t fire;
 
-	struct Relay *rl;
-	struct DigitalInput *di;
+	rl_t rl;
+	di_t di;
 } device_t;
 
 int set_devices(struct Device devices[MAX_DEVICES]);
