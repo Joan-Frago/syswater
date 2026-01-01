@@ -1,8 +1,11 @@
+#ifndef TCP_SERVER_H
+
+#define TCP_SERVER_H
+
 #include <libxml2/libxml/parser.h>
 
-#define MESSAGE_SIZE 1000
-#define FUNCTION_NAME_SIZE 50
-#define MAX_VARS_PER_REQUEST 200
+#define MESSAGE_SIZE 4096
+#define FUNCTION_NAME_SIZE 32
 
 void *start_tcp_server(void*);
 int talk(int *);
@@ -12,4 +15,6 @@ struct Request{
 	xmlNode *data;
 };
 
-int process_recv(char *buf, int buf_len);
+int process_recv(char *recv_buf, char *resp_buf);
+
+#endif

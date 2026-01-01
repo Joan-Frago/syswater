@@ -6,6 +6,7 @@
 #include "../inc/config.h"
 #include "../inc/tcp_server.h"
 #include "../inc/unipi_control.h"
+#include "../inc/device.h"
 
 void exit_handler();
 

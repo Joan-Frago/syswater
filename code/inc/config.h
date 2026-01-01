@@ -1,3 +1,7 @@
+#ifndef CONFIG_H
+
+#define CONFIG_H
+
 #define MAX_VAR_SIZE 256
 
 extern char *UNIPI_SYS_BASE_DIR;
@@ -12,3 +16,5 @@ int set_var_name(struct Var *, char *);
 int set_var_value(struct Var *, char *);
 int set_var(struct Var *);
 struct Var *alloc_var_mem(void);
+
+#endif

@@ -1,9 +1,6 @@
-#define MAX_DEVICES 24
+#ifndef UNIPI_CONTROL_H
+#define UNIPI_CONTROL_H
 
-#define DEVICE_NAME_SIZE 64
-#define DEVICE_DESC_SIZE 1024
-
-#define XML_DEVICES_PATH "conf/devices.xml"
 #define XML_XPATH_EXPR_SIZE 255
 
 typedef struct Relay{
@@ -33,20 +30,9 @@ typedef struct Fire_Device{
 
 } fire_device_t;
 
-typedef struct Device{
-	int id;
-	char *name;
-	char *description;
-	historify_t hist;
-	fire_device_t fire;
-
-	rl_t rl;
-	di_t di;
-} device_t;
-
-int set_devices(struct Device devices[MAX_DEVICES]);
-
 int relay_write(struct Relay *, int);
 int digital_read(struct DigitalInput *, int *);
 
 void *core(void*);
+
+#endif

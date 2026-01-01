@@ -1,21 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/xpath.h>
 #include <libxml2/libxml/xpathInternals.h>
 #include "../inc/unipi_control.h"
+#include "../inc/device.h"
 #include "../inc/util.h"
-
-int read_devices_xml(struct Device devices[MAX_DEVICES]);
-int read_device_id(struct Device devices[MAX_DEVICES], xmlNode *, int);
-int read_device_name(struct Device devices[MAX_DEVICES], xmlXPathContext *, int);
-int read_device_description(struct Device devices[MAX_DEVICES], xmlXPathContext *, int);
-int read_device_historify(struct Device devices[MAX_DEVICES], xmlXPathContext *, int);
-int read_device_fire(struct Device devices[MAX_DEVICES], xmlXPathContext *, int);
-int read_device_fire_date(struct Device devices[MAX_DEVICES], xmlXPathContext *, int);
-int read_device_relay(struct Device devices[MAX_DEVICES], xmlXPathContext *, int);
-int read_device_digital_input(struct Device devices[MAX_DEVICES], xmlXPathContext *, int);
 
 /*
  * Set all devices before running.
@@ -204,6 +194,18 @@ int read_device_digital_input(struct Device devices[MAX_DEVICES], xmlXPathContex
 		printf("Device [%d] digital_input: id_pin=%s pin=%s\n", dev_idx, devices[dev_idx].di.id_pin, devices[dev_idx].di.pin);
 	}
 	if(xpath_obj_relay) xmlXPathFreeObject(xpath_obj_relay);
+
+	return 0;
+}
+
+int get_all_devices(void){
+	printf("Getting all devices...\n");
+
+	return 0;
+}
+
+int set_device(xmlNode *dev_node){
+	printf("Setting device...\n");
 
 	return 0;
 }
