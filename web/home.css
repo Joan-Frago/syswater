@@ -1,0 +1,74 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: system-ui, sans-serif;
+	background-color: #f4f6f8;
+	color: #333;
+}
+
+.header {
+	background-color: #1e293b;
+	color: #fff;
+	padding: 1.5rem;
+	text-align: center;
+}
+
+.house-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 1.5rem;
+	padding: 2rem;
+}
+
+.device {
+	background-color: #ffffff;
+	border-radius: 12px;
+	padding: 1.2rem;
+	text-align: center;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.device:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.device-svg {
+	width: 80px;
+	height: 80px;
+	margin: 0 auto 1rem;
+}
+
+.device-svg img {
+	width: 100%;
+	height: 100%;
+}
+
+.device h2 {
+	font-size: 1rem;
+	margin-bottom: 0.8rem;
+}
+
+.device-btn {
+	padding: 0.5rem 1rem;
+	border-radius: 20px;
+	border: none;
+	cursor: pointer;
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.device-btn.on {
+	background-color: #22c55e;
+	color: white;
+}
+
+.device-btn.off {
+	background-color: #ef4444;
+	color: white;
+}
