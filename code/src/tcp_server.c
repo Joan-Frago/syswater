@@ -7,8 +7,11 @@
 #include <arpa/inet.h>
 #include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/tree.h>
+#include <libxml2/libxml/xpath.h>
 
 #include "../inc/tcp_server.h"
+
+char *read_request_function(char *);
 
 void *start_tcp_server(void* arg){
 	printf("Server Thread ID is %lu\n",(unsigned long)pthread_self());
@@ -91,7 +94,6 @@ int talk(int *sockfd){
 			printf("Error processing received data from client\n");
 		}
 
-		strcat(resp_buf, "ok\\n");
 		// Send a response
 		send(*sockfd, resp_buf, strlen(resp_buf), 0);
 
@@ -107,19 +109,51 @@ int talk(int *sockfd){
  */
 int process_recv(char *recv_buf, char *resp_buf){
 	printf("Received buffer: %s\n", recv_buf);
+	strcat(resp_buf, "ok\\n");
 
-	// Parse xml data
-	
-	// Get function name
+	struct Request req;
+
+	// Get function name from xml
+	req.function = read_request_function(recv_buf);
 	
 	// Get the rest of the xml (children node)
-
-	// struct Request req;
-	// Set req.function to the function name
-	
 	// Set req.data to the rest of the xml
+	
+	printf("Request function name: %s\n", req.function);
 
 	// Call another function that reads req.function and calls the target function
 
 	return 0;
+}
+
+/*
+ * Reads the function name from the request and writes it in dest
+ */
+char *read_request_function(char *xml_doc_str){
+	xmlDoc *req_xml_doc = xmlReadDoc(BAD_CAST xml_doc_str, NULL, NULL, 0);
+	if(req_xml_doc == NULL){
+		printf("Error: Could not parse request xml.\n");
+	}
+
+	
+	xmlXPathContext *xpath_ctx = xmlXPathNewContext(req_xml_doc);
+	if(xpath_ctx == NULL){
+		printf("Error: Unable to create new XPath context.\n");
+	}
+
+	xmlNode *root = xmlDocGetRootElement(req_xml_doc);
+	
+	xmlNode *device = root->children;
+	device = device->next;
+
+	xpath_ctx->node = device;
+
+	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST "/request/function", xpath_ctx);
+
+	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
+	xmlChar *content = xmlNodeGetContent(node);
+
+	xmlXPathFreeObject(xpath_obj);
+
+	return (char *)content;
 }
