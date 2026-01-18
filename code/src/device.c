@@ -70,10 +70,9 @@ int read_devices_xml(struct Device devices[MAX_DEVICES]){
 int read_device_id(struct Device *device, xmlNode *dev_node){
 	xmlChar *id = xmlGetProp(dev_node, BAD_CAST "id");
 	device->id = char2int((char *)id);
+	//printf("Device [%d]\n", device->id);
+
 	xmlFree(id);
-
-	printf("Device [%d]\n", device->id);
-
 	return 0;
 }
 
@@ -85,8 +84,7 @@ int read_device_name(struct Device *device, xmlXPathContext *xpath_ctx){
 	xmlChar *content = xmlNodeGetContent(node);
 
 	device->name = strdup((char *)content);
-
-	printf("Device [%d] name: %s\n", device->id, device->name);
+	//printf("Device [%d] name: %s\n", device->id, device->name);
 
 	xmlFree(content);
 	xmlXPathFreeObject(xpath_obj);
@@ -102,8 +100,7 @@ int read_device_description(struct Device *device, xmlXPathContext *xpath_ctx){
 	xmlChar *content = xmlNodeGetContent(node);
 
 	device->description = strdup((char *)content);
-
-	printf("Device [%d] description: %s\n", device->id, device->description);
+	//printf("Device [%d] description: %s\n", device->id, device->description);
 
 	xmlFree(content);
 	xmlXPathFreeObject(xpath_obj);
@@ -121,8 +118,7 @@ int read_device_historify(struct Device *device, xmlXPathContext *xpath_ctx){
 
 	device->hist.active = char2int((char *)active);
 	device->hist.period = char2int((char *)period);
-
-	printf("Device [%d] historify: active=%d period=%d\n", device->id, device->hist.active, device->hist.period);
+	//printf("Device [%d] historify: active=%d period=%d\n", device->id, device->hist.active, device->hist.period);
 
 	xmlFree(active);
 	xmlFree(period);
@@ -141,8 +137,7 @@ int read_device_fire(struct Device *device, xmlXPathContext *xpath_ctx){
 
 	device->fire.active = char2int((char *)active);
 	device->fire.period = char2int((char *)period);
-
-	printf("Device [%d] fire: active=%d period=%d\n", device->id, device->fire.active, device->fire.period);
+	//printf("Device [%d] fire: active=%d period=%d\n", device->id, device->fire.active, device->fire.period);
 
 	read_device_fire_date(device, xpath_ctx);
 
@@ -162,8 +157,7 @@ int read_device_fire_date(struct Device *device, xmlXPathContext *xpath_ctx){
 
 	device->fire.date.start = (char *)xmlNodeGetContent(date_start);
 	device->fire.date.end = (char *)xmlNodeGetContent(date_end);
-
-	printf("Device [%d] fire date: start=%s end=%s\n", device->id, device->fire.date.start, device->fire.date.end);
+	//printf("Device [%d] fire date: start=%s end=%s\n", device->id, device->fire.date.start, device->fire.date.end);
 
 	xmlXPathFreeObject(xpath_obj_start);
 	xmlXPathFreeObject(xpath_obj_end);
@@ -178,8 +172,7 @@ int read_device_relay(struct Device *device, xmlXPathContext *xpath_ctx){
 
 		device->rl.id_pin = (char *)xmlGetProp(node_relay, BAD_CAST "id_pin");
 		device->rl.pin = (char *)xmlGetProp(node_relay, BAD_CAST "pin");
-
-		printf("Device [%d] relay: id_pin=%s pin=%s\n", device->id, device->rl.id_pin, device->rl.pin);
+		//printf("Device [%d] relay: id_pin=%s pin=%s\n", device->id, device->rl.id_pin, device->rl.pin);
 	}
 	if(xpath_obj_relay) xmlXPathFreeObject(xpath_obj_relay);
 
@@ -193,8 +186,7 @@ int read_device_digital_input(struct Device *device, xmlXPathContext *xpath_ctx)
 
 		device->di.id_pin = (char *)xmlGetProp(node_relay, BAD_CAST "id_pin");
 		device->di.pin = (char *)xmlGetProp(node_relay, BAD_CAST "pin");
-
-		printf("Device [%d] digital_input: id_pin=%s pin=%s\n", device->id, device->di.id_pin, device->di.pin);
+		//printf("Device [%d] digital_input: id_pin=%s pin=%s\n", device->id, device->di.id_pin, device->di.pin);
 	}
 	if(xpath_obj_relay) xmlXPathFreeObject(xpath_obj_relay);
 
@@ -202,7 +194,7 @@ int read_device_digital_input(struct Device *device, xmlXPathContext *xpath_ctx)
 }
 
 int get_all_devices(char *resp_buf){
-	printf("Getting all devices...\n");
+	printf("New Request: get_all_devices...\n");
 
 	FILE *fptr = fopen(XML_DEVICES_PATH, "r");
 	if(fptr==NULL){
@@ -216,7 +208,7 @@ int get_all_devices(char *resp_buf){
 		resp_buf[i++] = c;
 	}
 	resp_buf[i] = EOF;
-	printf("%s\n",resp_buf);
+	printf("Response:\n%s\n",resp_buf);
 
 	return 0;
 }
