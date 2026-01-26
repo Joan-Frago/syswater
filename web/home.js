@@ -1,7 +1,12 @@
-function set_devices(devices_xml) {
+function set_devices(devices_xml_str) {
+	let parser = new DOMParser();
+	let devices_xml_doc = parser.parseFromString(devices_xml_str, "application/xml");
 
-	let devices_json_str = xml2json(devices_xml);
-	console.log(devices_json_str);
+	let devices_json = xml2json(devices_xml_doc, "");
+	console.log(devices_json);
+
+	devices_json = JSON.parse(devices_json);
+	console.log(devices_json.devices);
 }
 
 /*	This work is licensed under Creative Commons GNU LGPL License.

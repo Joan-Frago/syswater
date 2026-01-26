@@ -12,7 +12,7 @@ function get_all_devices(){
 
 	// 3. Read response xml and set devices
 	$response = server_read($sock_fd);
-	write2console("Server response:\\n".$response);
+	//write2console("Server response:\\n".$response);
 
 	$out = "<script>";
 	$out .= "set_devices(\"".$response."\")";
