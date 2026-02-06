@@ -110,7 +110,7 @@ int talk(int *sockfd){
  * Data must be an xml.
  */
 int process_recv(char *recv_buf, char *resp_buf){
-	printf("Received buffer: %s\n", recv_buf);
+	// printf("Received buffer: %s\n", recv_buf);
 	strcat(resp_buf, "ok\\n");
 
 	req_t req;

@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <libxml2/libxml/parser.h>
-#include <libxml2/libxml/xpath.h>
-#include <libxml2/libxml/xpathInternals.h>
 #include "../inc/unipi_control.h"
 #include "../inc/device.h"
 #include "../inc/util.h"
 #include "../inc/tcp_server.h"
+#include "../inc/device_xml.h"
 
 /*
  * Set all devices before running.
@@ -25,46 +23,62 @@ int set_devices(struct Device devices[MAX_DEVICES]){
 }
 
 int read_devices_xml(struct Device devices[MAX_DEVICES]){
-	xmlDoc *devices_doc = xmlReadFile(XML_DEVICES_PATH, NULL, 0);
-	if(devices_doc == NULL){
-		printf("Could not parse devices configuration xml file at \"%s\"\n",XML_DEVICES_PATH);
-		return -1;
-	}
+	// printf("Reading devices xml...\n");
+	device_xml_t *dxml = open_devices_xml_file();
 
-	xmlXPathContext *xpath_ctx = xmlXPathNewContext(devices_doc);
-	if(xpath_ctx == NULL){
-		printf("Error: Unable to create new XPath context.\n");
-		return -1;
-	}
-
-	xmlNode *root = xmlDocGetRootElement(devices_doc);
+	if(dxml == NULL) return -1;
 
 	int dev_idx = 0;
-	for(xmlNode *device = root->children; device != NULL; device = device->next){
+	for(xmlNode *device = dxml->root->children; device != NULL; device = device->next){
 		if(device->type == XML_ELEMENT_NODE){
 			if(dev_idx >= MAX_DEVICES) break;
 
-			xpath_ctx->node = device;
+			dxml->xpath_context->node = device;
 
 			struct Device *dev_ptr = &devices[dev_idx];
 			read_device_id(dev_ptr, device);
-			read_device_name(dev_ptr, xpath_ctx);
-			read_device_description(dev_ptr, xpath_ctx);
-			read_device_historify(dev_ptr, xpath_ctx);
-			read_device_fire(dev_ptr, xpath_ctx);
-			read_device_relay(dev_ptr, xpath_ctx);
-			read_device_digital_input(dev_ptr, xpath_ctx);
+			read_device_name(dev_ptr, dxml->xpath_context);
+			read_device_description(dev_ptr, dxml->xpath_context);
+			read_device_historify(dev_ptr, dxml->xpath_context);
+			read_device_fire(dev_ptr, dxml->xpath_context);
+			read_device_relay(dev_ptr, dxml->xpath_context);
+			read_device_digital_input(dev_ptr, dxml->xpath_context);
 
 			dev_idx++;
 		}
 	}
 
-	xmlFreeDoc(devices_doc);
-	xmlXPathFreeContext(xpath_ctx);
+	close_devices_xml_file(dxml);
 
-	printf("Finished reading xml\n");
+	// printf("Finished reading xml\n");
 	
 	return 0;
+}
+
+xmlNode *read_devices_xml_by_id(int id){
+	device_xml_t *dxml = open_devices_xml_file();
+
+	device_t dev_ptr;
+	xmlNode *found_device = NULL;
+
+	int dev_idx = 0;
+	for(xmlNode *device = dxml->root->children; device != NULL; device = device->next){
+		if(device->type == XML_ELEMENT_NODE){
+			if(dev_idx >= MAX_DEVICES) break;
+
+			dxml->xpath_context->node = device;
+			
+			read_device_id(&dev_ptr, device);
+
+			if(dev_ptr.id == id){
+				found_device = device;
+			}
+		}
+	}
+
+	close_devices_xml_file(dxml);
+
+	return found_device;
 }
 
 int read_device_id(struct Device *device, xmlNode *dev_node){
@@ -194,8 +208,6 @@ int read_device_digital_input(struct Device *device, xmlXPathContext *xpath_ctx)
 }
 
 int get_all_devices(char *resp_buf){
-	printf("New Request: get_all_devices...\n");
-
 	FILE *fptr = fopen(XML_DEVICES_PATH, "r");
 	if(fptr==NULL){
 		printf("Error: Could not open %s\n",XML_DEVICES_PATH);
@@ -208,7 +220,7 @@ int get_all_devices(char *resp_buf){
 		resp_buf[i++] = c;
 	}
 	resp_buf[i] = '\0';
-	printf("Response:\n%s\n",resp_buf);
+	// printf("Response:\n%s\n",resp_buf);
 
 	return 0;
 }

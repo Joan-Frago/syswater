@@ -1,14 +1,17 @@
+#ifndef DEVICE_H
+
 #include "./unipi_control.h"
 
-#ifndef DEVICE_H
+#include <libxml2/libxml/parser.h>
+#include <libxml2/libxml/xpath.h>
+#include <libxml2/libxml/tree.h>
+#include <libxml2/libxml/xpath.h>
 
 #define DEVICE_H
 
 #define MAX_DEVICES 24
 #define DEVICE_NAME_SIZE 64
 #define DEVICE_DESC_SIZE 1024
-
-#define XML_DEVICES_PATH "conf/devices.xml"
 
 typedef struct Device{
 	int id;
@@ -23,10 +26,9 @@ typedef struct Device{
 
 int set_devices(struct Device devices[MAX_DEVICES]);
 
-#include <libxml2/libxml/tree.h>
-#include <libxml2/libxml/xpath.h>
-
+xmlNode *read_devices_xml_by_id(int id);
 int read_devices_xml(struct Device devices[MAX_DEVICES]);
+
 int read_device_id(struct Device *device, xmlNode *);
 int read_device_name(struct Device *device, xmlXPathContext *);
 int read_device_description(struct Device *device, xmlXPathContext *);
