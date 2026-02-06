@@ -18,8 +18,6 @@ typedef struct Var{
 extern var_t vars[MAX_VARS];
 
 int load_config(void);
-int set_var_name(var_t *, char *);
-int set_var_value(var_t *, char *);
 char *get_var_value(char *var_name);
 
 #endif

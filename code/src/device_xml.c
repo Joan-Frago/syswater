@@ -1,6 +1,9 @@
 #include "../inc/device_xml.h"
 
-device_xml_t *alloc_devices_xml_file(void){
+static device_xml_t *alloc_devices_xml_file(void);
+static void free_devices_xml_file(device_xml_t *);
+
+static device_xml_t *alloc_devices_xml_file(void){
 	//printf("Allocating memory for devices xml file struct...\n");
 
 	device_xml_t *dxml = (device_xml_t *) malloc(sizeof(device_xml_t));
@@ -15,7 +18,7 @@ device_xml_t *alloc_devices_xml_file(void){
 	return dxml;
 }
 
-void free_devices_xml_file(device_xml_t *dxml){
+static void free_devices_xml_file(device_xml_t *dxml){
 	// printf("Freeing dxml...\n");
 
 	if(dxml->xpath_context){

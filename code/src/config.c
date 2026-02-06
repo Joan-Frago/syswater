@@ -5,6 +5,9 @@
 
 var_t vars[MAX_VARS];
 
+static int set_var_name(var_t *, char *);
+static int set_var_value(var_t *, char *);
+
 int load_config(void){
 	printf("Loading config...\n");
 
@@ -52,13 +55,13 @@ int load_config(void){
 	return 0;
 }
 
-int set_var_name(var_t *var, char *buf){
+static int set_var_name(var_t *var, char *buf){
 	strcpy(var->name,buf);
 
 	return 0;
 }
 
-int set_var_value(var_t *var, char *buf){
+static int set_var_value(var_t *var, char *buf){
 	strcpy(var->value,buf);
 	
 	return 0;

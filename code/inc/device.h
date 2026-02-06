@@ -26,18 +26,6 @@ typedef struct Device{
 
 int set_devices(struct Device devices[MAX_DEVICES]);
 
-xmlNode *read_devices_xml_by_id(int id);
-int read_devices_xml(struct Device devices[MAX_DEVICES]);
-
-int read_device_id(struct Device *device, xmlNode *);
-int read_device_name(struct Device *device, xmlXPathContext *);
-int read_device_description(struct Device *device, xmlXPathContext *);
-int read_device_historify(struct Device *device, xmlXPathContext *);
-int read_device_fire(struct Device *device, xmlXPathContext *);
-int read_device_fire_date(struct Device *device, xmlXPathContext *);
-int read_device_relay(struct Device *device, xmlXPathContext *);
-int read_device_digital_input(struct Device *device, xmlXPathContext *);
-
 int get_all_devices(char *resp_buf);
 int set_device(xmlNode *);
 

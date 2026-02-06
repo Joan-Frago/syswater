@@ -5,7 +5,6 @@
 #include "../inc/unipi_control.h"
 #include "../inc/config.h"
 
-
 int digital_read(struct DigitalInput *di, int *dest){
 	int ret_val = 0;
 

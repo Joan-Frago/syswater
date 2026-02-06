@@ -6,6 +6,19 @@
 #include "../inc/tcp_server.h"
 #include "../inc/device_xml.h"
 
+static xmlNode *read_devices_xml_by_id(int id);
+static int read_devices_xml(struct Device devices[MAX_DEVICES]);
+
+static int read_device_id(struct Device *device, xmlNode *);
+static int read_device_name(struct Device *device, xmlXPathContext *);
+static int read_device_description(struct Device *device, xmlXPathContext *);
+static int read_device_historify(struct Device *device, xmlXPathContext *);
+static int read_device_fire(struct Device *device, xmlXPathContext *);
+static int read_device_fire_date(struct Device *device, xmlXPathContext *);
+static int read_device_relay(struct Device *device, xmlXPathContext *);
+static int read_device_digital_input(struct Device *device, xmlXPathContext *);
+
+
 /*
  * Set all devices before running.
  * Read from devices xml and init Devices.
@@ -22,7 +35,7 @@ int set_devices(struct Device devices[MAX_DEVICES]){
 	return 0;
 }
 
-int read_devices_xml(struct Device devices[MAX_DEVICES]){
+static int read_devices_xml(struct Device devices[MAX_DEVICES]){
 	// printf("Reading devices xml...\n");
 	device_xml_t *dxml = open_devices_xml_file();
 
@@ -55,7 +68,7 @@ int read_devices_xml(struct Device devices[MAX_DEVICES]){
 	return 0;
 }
 
-xmlNode *read_devices_xml_by_id(int id){
+static xmlNode *read_devices_xml_by_id(int id){
 	device_xml_t *dxml = open_devices_xml_file();
 
 	device_t dev_ptr;
@@ -81,7 +94,7 @@ xmlNode *read_devices_xml_by_id(int id){
 	return found_device;
 }
 
-int read_device_id(struct Device *device, xmlNode *dev_node){
+static int read_device_id(struct Device *device, xmlNode *dev_node){
 	xmlChar *id = xmlGetProp(dev_node, BAD_CAST "id");
 	device->id = char2int((char *)id);
 	//printf("Device [%d]\n", device->id);
@@ -90,7 +103,7 @@ int read_device_id(struct Device *device, xmlNode *dev_node){
 	return 0;
 }
 
-int read_device_name(struct Device *device, xmlXPathContext *xpath_ctx){
+static int read_device_name(struct Device *device, xmlXPathContext *xpath_ctx){
 	char *expr = "./name";
 	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
 
@@ -106,7 +119,7 @@ int read_device_name(struct Device *device, xmlXPathContext *xpath_ctx){
 	return 0;
 }
 
-int read_device_description(struct Device *device, xmlXPathContext *xpath_ctx){
+static int read_device_description(struct Device *device, xmlXPathContext *xpath_ctx){
 	char *expr = "./description";
 	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
 
@@ -122,7 +135,7 @@ int read_device_description(struct Device *device, xmlXPathContext *xpath_ctx){
 	return 0;
 }
 
-int read_device_historify(struct Device *device, xmlXPathContext *xpath_ctx){
+static int read_device_historify(struct Device *device, xmlXPathContext *xpath_ctx){
 	char *expr = "./historify";
 	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
 
@@ -141,7 +154,7 @@ int read_device_historify(struct Device *device, xmlXPathContext *xpath_ctx){
 	return 0;
 }
 
-int read_device_fire(struct Device *device, xmlXPathContext *xpath_ctx){
+static int read_device_fire(struct Device *device, xmlXPathContext *xpath_ctx){
 	char *expr = "./fire";
 	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
 
@@ -162,7 +175,7 @@ int read_device_fire(struct Device *device, xmlXPathContext *xpath_ctx){
 	return 0;
 }
 
-int read_device_fire_date(struct Device *device, xmlXPathContext *xpath_ctx){
+static int read_device_fire_date(struct Device *device, xmlXPathContext *xpath_ctx){
 	xmlXPathObjectPtr xpath_obj_start = xmlXPathEvalExpression(BAD_CAST "./fire/date/start", xpath_ctx);
 	xmlNode *date_start = xpath_obj_start->nodesetval->nodeTab[0];
 
@@ -179,7 +192,7 @@ int read_device_fire_date(struct Device *device, xmlXPathContext *xpath_ctx){
 	return 0;
 }
 
-int read_device_relay(struct Device *device, xmlXPathContext *xpath_ctx){
+static int read_device_relay(struct Device *device, xmlXPathContext *xpath_ctx){
 	xmlXPathObjectPtr xpath_obj_relay = xmlXPathEvalExpression(BAD_CAST "./relay", xpath_ctx);
 	if(xpath_obj_relay && !xmlXPathNodeSetIsEmpty(xpath_obj_relay->nodesetval)){
 		xmlNode *node_relay = xpath_obj_relay->nodesetval->nodeTab[0];
@@ -193,7 +206,7 @@ int read_device_relay(struct Device *device, xmlXPathContext *xpath_ctx){
 	return 0;
 }
 
-int read_device_digital_input(struct Device *device, xmlXPathContext *xpath_ctx){
+static int read_device_digital_input(struct Device *device, xmlXPathContext *xpath_ctx){
 	xmlXPathObjectPtr xpath_obj_relay = xmlXPathEvalExpression(BAD_CAST "./digital_input", xpath_ctx);
 	if(xpath_obj_relay && !xmlXPathNodeSetIsEmpty(xpath_obj_relay->nodesetval)){
 		xmlNode *node_relay = xpath_obj_relay->nodesetval->nodeTab[0];

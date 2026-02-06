@@ -33,6 +33,4 @@ typedef struct Fire_Device{
 int relay_write(struct Relay *, int);
 int digital_read(struct DigitalInput *, int *);
 
-void *core(void*);
-
 #endif

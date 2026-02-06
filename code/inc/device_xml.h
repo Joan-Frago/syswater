@@ -14,9 +14,6 @@ typedef struct DeviceXml{
 
 } device_xml_t;
 
-device_xml_t *alloc_devices_xml_file(void);
-void free_devices_xml_file(device_xml_t *);
-
 device_xml_t *open_devices_xml_file(void);
 void close_devices_xml_file(device_xml_t *);
 

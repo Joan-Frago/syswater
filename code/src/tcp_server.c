@@ -12,6 +12,12 @@
 #include "../inc/device.h"
 #include "../inc/config.h"
 
+static int talk(int *);
+static int process_recv(char *recv_buf, char *resp_buf);
+static int read_request(req_t *, char *);
+static int call_target_function(req_t *, char *resp_buf);
+static int escape_buf(char *buf, int buf_len);
+
 void *start_tcp_server(void* arg){
 	printf("Server Thread ID is %lu\n",(unsigned long)pthread_self());
 
@@ -59,12 +65,12 @@ void *start_tcp_server(void* arg){
 			continue;
 		}
 
-		printf("New client connected\n");
+		// printf("New client connected\n");
 
 		talk(&new_sockfd);
 
 		close(new_sockfd);
-		printf("Ready for new client\n");
+		// printf("Ready for new client\n");
 	}
 
 	// Close the socket
@@ -72,13 +78,13 @@ void *start_tcp_server(void* arg){
 	return 0;
 }
 
-int talk(int *sockfd){
+static int talk(int *sockfd){
 	while(1){
 		// Receive a message
 		char recv_buf[MESSAGE_SIZE];
 		ssize_t bytes_recv = recv(*sockfd, recv_buf, MESSAGE_SIZE, 0);
 		if(bytes_recv == 0){
-			printf("Client closed connection\n");
+			// printf("Client closed connection\n");
 			break;
 		}else if(bytes_recv < 0){
 			perror("Error receiving data\n");
@@ -109,16 +115,16 @@ int talk(int *sockfd){
  *
  * Data must be an xml.
  */
-int process_recv(char *recv_buf, char *resp_buf){
+static int process_recv(char *recv_buf, char *resp_buf){
 	// printf("Received buffer: %s\n", recv_buf);
 	strcat(resp_buf, "ok\\n");
 
 	req_t req;
 	read_request(&req, recv_buf);
 
-	printf("Request function name: %s\n", req.function);
+	// printf("Request function name: %s\n", req.function);
 	if(req.data){
-		printf("Request data: %s\n", BAD_CAST req.data);
+		// printf("Request data: %s\n", BAD_CAST req.data);
 	}
 
 	// Call another function that reads req.function and calls the target function
@@ -133,7 +139,7 @@ int process_recv(char *recv_buf, char *resp_buf){
 /*
  * Reads the function name and content from the request and sets the request struct
  */
-int read_request(req_t *req, char *xml_doc_str){
+static int read_request(req_t *req, char *xml_doc_str){
 	xmlDoc *req_xml_doc = xmlReadDoc(BAD_CAST xml_doc_str, NULL, NULL, 0);
 	if(req_xml_doc == NULL){
 		printf("Error: Could not parse request xml.\n");
@@ -179,7 +185,7 @@ int read_request(req_t *req, char *xml_doc_str){
 	return 0;
 }
 
-int call_target_function(req_t *req, char *resp_buf){
+static int call_target_function(req_t *req, char *resp_buf){
 	if(strcmp(req->function, "get_all_devices") == 0){
 		if(get_all_devices(resp_buf) == -1){
 			printf("Error: get_all_devices returned -1\n");
@@ -190,7 +196,7 @@ int call_target_function(req_t *req, char *resp_buf){
 	return 0;
 }
 
-int escape_buf(char *buf, int buf_len){
+static int escape_buf(char *buf, int buf_len){
 	char tmp_buf[MESSAGE_SIZE];
 	int idx_buf, idx_tmp_buf = 0;
 

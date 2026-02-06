@@ -8,7 +8,8 @@
 #include "../inc/unipi_control.h"
 #include "../inc/device.h"
 
-void exit_handler();
+static void *core(void*);
+static void exit_handler();
 
 struct Device devices[MAX_DEVICES];
 
@@ -42,7 +43,7 @@ int main(){
 	return 0;
 }
 
-void exit_handler(){
+static void exit_handler(){
 	printf("\nProgram terminated\n");
 	printf("Exiting application...\n");
 
