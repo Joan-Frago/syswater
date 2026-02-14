@@ -199,7 +199,8 @@ static int call_target_function(req_t *req, char *resp_buf){
 
 static int escape_buf(char *buf, int buf_len){
 	char tmp_buf[MESSAGE_SIZE];
-	int idx_buf, idx_tmp_buf = 0;
+	int idx_buf = 0;
+  int idx_tmp_buf = 0;
 
 	int c;
 	while(idx_tmp_buf < MESSAGE_SIZE && (c = buf[idx_buf++])!='\0'){
