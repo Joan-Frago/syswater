@@ -6,6 +6,10 @@
 #include "../inc/config.h"
 #include "../inc/tcp_server.h"
 #include "../inc/device.h"
+#include "../inc/logger.h"
+#include "../inc/loggerconf.h"
+
+#define LOG_FILE "log/home.log"
 
 static void *core(void*);
 static void exit_handler(int);
@@ -17,16 +21,20 @@ int main(){
 	signal(SIGINT, exit_handler);
 	signal(SIGTERM, exit_handler);
 
-	printf("Application PID is %ld\n\n",(long)getpid());
+    logger_initConsoleLogger(NULL);
+    logger_initFileLogger(LOG_FILE, 1024 * 1024, 5);
+    logger_setLevel(LogLevel_DEBUG);
+
+	LOG_INFO("Application PID is %ld\n\n",(long)getpid());
 
 	if(load_config() == -1){
-		perror("load_config returned -1. Error loading configuration\n");
+		LOG_ERROR("load_config returned -1. Error loading configuration");
 		return -1;
 	}
 
 	// Set all devices before running (read from xml file and init Devices (Relay or Digital Input or Both))
 	if(set_devices() == -1){
-		printf("Error: set_devices function returned with error code -1\n");
+		LOG_ERROR("Error: set_devices function returned with error code -1");
 		return -1;
 	}
 
@@ -44,8 +52,8 @@ int main(){
 }
 
 static void exit_handler(int signal){
-	printf("\nProgram terminated\n");
-	printf("Exiting application...\n");
+	LOG_INFO("Program terminated");
+	LOG_INFO("Exiting application...");
 
 	exit(0);
 }
@@ -94,7 +102,7 @@ static int historify_device(device_t *device){
 					if(rl_val == -1)
 						return -1;
 
-					printf("Historify device \"%s\" Relay \"%s\". Value = %d.\n",device->name, device->rl.id_pin, rl_val);
+					LOG_DEBUG("Historify device \"%s\" Relay \"%s\". Value = %d.",device->name, device->rl.id_pin, rl_val);
 				}
 
 				// DIGITAL INPUT
@@ -103,7 +111,7 @@ static int historify_device(device_t *device){
 					if(di_val == -1)
 						return -1;
 
-					printf("Historify device \"%s\" DigitalInput \"%s\". Value = %d.\n",device->name, device->di.id_pin, di_val);
+					LOG_DEBUG("Historify device \"%s\" DigitalInput \"%s\". Value = %d.",device->name, device->di.id_pin, di_val);
 				}
 
 				device->hist.remaining_ticks = device->hist.period;
@@ -130,7 +138,7 @@ static int fire_device(device_t *device){
 
 					}
 
-					printf("Device \"%s\" with Relay \"%s\" fired.\n",device->name, device->rl.id_pin);
+					LOG_DEBUG("Device \"%s\" with Relay \"%s\" fired.",device->name, device->rl.id_pin);
 				}
 
 				device->fire.remaining_ticks = device->fire.period;

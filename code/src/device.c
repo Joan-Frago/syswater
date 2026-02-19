@@ -6,6 +6,7 @@
 #include "../inc/util.h"
 #include "../inc/tcp_server.h"
 #include "../inc/device_xml.h"
+#include "../inc/logger.h"
 
 device_t devices[MAX_DEVICES];
 
@@ -27,11 +28,11 @@ static int read_device_digital_input(device_t *device, xmlXPathContext *);
  * Read from devices xml and init Devices.
  */
 int set_devices(){
-	printf("Setting devices...\n");
+	LOG_INFO("Setting devices...");
 
 	// dynamic configuration
 	if(read_devices_xml() == -1){
-		printf("Error: Could not read devices xml.\n");
+		LOG_ERROR("Error: Could not read devices xml.");
 		return -1;
 	}
 
@@ -42,7 +43,7 @@ int set_devices(){
 		devices[i].fire.remaining_ticks = devices[i].hist.period*3600;
 	}
 
-	printf("All devices have been set.\n\n");
+	LOG_INFO("All devices have been set.");
 	return 0;
 }
 
@@ -252,7 +253,7 @@ device_t *get_device_by_id(int id){
 int get_all_devices(char *resp_buf){
 	FILE *fptr = fopen(XML_DEVICES_PATH, "r");
 	if(fptr==NULL){
-		printf("Error: Could not open %s\n",XML_DEVICES_PATH);
+		LOG_ERROR("Error: Could not open %s",XML_DEVICES_PATH);
 		return -1;
 	}
 
@@ -272,26 +273,26 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 	
 	xmlNode *dev_node = find_child_node(data, BAD_CAST "device");
 	if(dev_node == NULL){
-		printf("Error: device.c : Did not find a child node called \"device\"\n");
+		LOG_ERROR("Error: device.c : Did not find a child node called \"device\"");
 		return -1;
 	}
 
 	device_t tmp_dev;
 	if(read_device_id(&tmp_dev, dev_node) != 0){
-		printf("Error: device.c : Could not read the device id\n");
+		LOG_ERROR("Error: device.c : Could not read the device id");
 		return -1;
 	}
 	
 	device_t *device = get_device_by_id(tmp_dev.id);
 	if(device == NULL){
-		printf("Error: device.c : Could not get device by id \"%d\"\n", tmp_dev.id);
+		LOG_ERROR("Error: device.c : Could not get device by id \"%d\"", tmp_dev.id);
 		return -1;
 	}
 
 	if(device->rl.id_pin){
 		int rl_val = relay_read(&device->rl);
 		if(rl_val == -1){
-			printf("Error: \"device.c\" source file : Seems like the relay couldn\'t read its state.");
+			LOG_ERROR("Error: \"device.c\" source file : Seems like the relay couldn\'t read its state.");
 			return -1;
 		}
 	}
@@ -299,7 +300,7 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 	if(device->di.id_pin){
 		int di_val = digital_read(&device->di);
 		if(di_val == -1){
-			printf("Error: \"device.c\" source file : Seems like the digital input couldn\'t read its state.");
+			LOG_ERROR("Error: \"device.c\" source file : Seems like the digital input couldn\'t read its state.");
 			return -1;
 		}
 	}
@@ -311,7 +312,7 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 }
 
 int set_device(xmlNode *dev_node){
-	printf("Setting device...\n");
+	LOG_DEBUG("Setting device...\n");
 
 	return 0;
 }

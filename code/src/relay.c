@@ -4,6 +4,7 @@
 
 #include "../inc/unipi_control.h"
 #include "../inc/config.h"
+#include "../inc/logger.h"
 
 int relay_write(rl_t *relay, int new_state){
 	char *base_dir = get_var_value(UNIPI_SYS_BASE_DIR);
@@ -12,7 +13,7 @@ int relay_write(rl_t *relay, int new_state){
 	// Allocate memory for the file path
 	char *file_path = (char *)malloc(path_len);
 	if(file_path == NULL){
-		perror("Could not allocate memory for file path");
+		LOG_ERROR("Could not allocate memory for file path.");
 		return -1;
 	}
 
@@ -22,7 +23,7 @@ int relay_write(rl_t *relay, int new_state){
 
 	FILE *fp = fopen(file_path,"w");
 	if(fp == NULL){
-		printf("Could not open file \"%s\"\n",file_path);
+		LOG_ERROR("Could not open file \"%s\"",file_path);
 		return -1;
 	}
 
@@ -42,7 +43,7 @@ int relay_read(rl_t *rl){
 
 	char *file_path = (char *)malloc(path_len);
 	if(file_path == NULL){
-		perror("Could not allocate memory for file path\n");
+		LOG_ERROR("Could not allocate memory for file path.");
 		return -1;
 	}
 

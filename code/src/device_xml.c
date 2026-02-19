@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../inc/device_xml.h"
+#include "../inc/logger.h"
 
 static device_xml_t *alloc_devices_xml_file(void);
 static void free_devices_xml_file(device_xml_t *);
@@ -47,13 +48,13 @@ device_xml_t *open_devices_xml_file(void){
 
 	dxml->devices_doc = xmlReadFile(XML_DEVICES_PATH, NULL, 0);
 	if(dxml->devices_doc == NULL){
-		printf("Could not parse devices configuration xml file at \"%s\"\n",XML_DEVICES_PATH);
+		LOG_ERROR("Could not parse devices configuration xml file at \"%s\"",XML_DEVICES_PATH);
 		return NULL;
 	}
 
 	dxml->xpath_context = xmlXPathNewContext(dxml->devices_doc);
 	if(dxml->xpath_context == NULL){
-		printf("Error: Unable to create new XPath context.\n");
+		LOG_ERROR("Error: Unable to create new XPath context.");
 		return NULL;
 	}
 

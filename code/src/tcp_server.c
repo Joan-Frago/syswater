@@ -12,6 +12,7 @@
 #include "../inc/tcp_server.h"
 #include "../inc/device.h"
 #include "../inc/config.h"
+#include "../inc/logger.h"
 
 static int talk(int *);
 static int process_recv(char *recv_buf, char *resp_buf);
@@ -20,7 +21,7 @@ static int call_target_function(req_t *, char *resp_buf);
 static int escape_buf(char *buf, int buf_len);
 
 void *start_tcp_server(void* arg){
-	printf("Server Thread ID is %lu\n",(unsigned long)pthread_self());
+	LOG_INFO("Server Thread ID is %lu",(unsigned long)pthread_self());
 
 	int sockfd, new_sockfd;
 	struct sockaddr_in server_addr;
@@ -30,7 +31,7 @@ void *start_tcp_server(void* arg){
 	// Socket creation
 	sockfd = socket(PF_INET, SOCK_STREAM, 0);
 	if(sockfd < 0){
-		perror("Error creating the socket\n");
+		LOG_ERROR("Error creating the socket");
 		return NULL;
 	}
 
@@ -41,14 +42,14 @@ void *start_tcp_server(void* arg){
 
 	int ret = bind(sockfd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
 	if(ret < 0){
-		perror("Error creating the socket\n");
+		LOG_ERROR("Error creating the socket");
 		return NULL;
 	}
 
 	// Listen for connections
 	ret = listen(sockfd,5);
 	if(ret < 0){
-		perror("Error listening for connections\n");
+		LOG_ERROR("Error listening for connections");
 		return NULL;
 	}
 
@@ -57,12 +58,12 @@ void *start_tcp_server(void* arg){
 	char *address = inet_ntoa(server_addr.sin_addr);
 	int port = ntohs(server_addr.sin_port);
 
-	printf("Server listening on address %s port %d\n",address,port);
+	LOG_INFO("Server listening on address %s port %d",address,port);
 
 	for(;;){
 		new_sockfd = accept(sockfd, (struct sockaddr *)&remote_addr, &addrlen);
 		if(new_sockfd < 0){
-			perror("Error accepting a connection\n");
+			LOG_ERROR("Error accepting a connection");
 			continue;
 		}
 
@@ -88,7 +89,7 @@ static int talk(int *sockfd){
 			// printf("Client closed connection\n");
 			break;
 		}else if(bytes_recv < 0){
-			perror("Error receiving data\n");
+			LOG_ERROR("Error receiving data");
 			break;
 		}
 
@@ -97,7 +98,7 @@ static int talk(int *sockfd){
 
 		// Process received data
 		if(process_recv(recv_buf, resp_buf) != 0){
-			printf("Error: Could not process received data from client\n");
+			LOG_ERROR("Error: Could not process received data from client");
 		}
 
 		// Escape response buffer
@@ -130,7 +131,7 @@ static int process_recv(char *recv_buf, char *resp_buf){
 
 	// Call another function that reads req.function and calls the target function
 	if(call_target_function(&req, resp_buf) == -1){
-		printf("Error: call_target_function returned -1\n");
+		LOG_ERROR("Error: call_target_function returned -1");
 		return -1;
 	}
 
@@ -143,13 +144,13 @@ static int process_recv(char *recv_buf, char *resp_buf){
 static int read_request(req_t *req, char *xml_doc_str){
 	xmlDoc *req_xml_doc = xmlReadDoc(BAD_CAST xml_doc_str, NULL, NULL, 0);
 	if(req_xml_doc == NULL){
-		printf("Error: Could not parse request xml.\n");
+		LOG_ERROR("Error: Could not parse request xml.");
 		return -1;
 	}
 	
 	xmlXPathContext *xpath_ctx = xmlXPathNewContext(req_xml_doc);
 	if(xpath_ctx == NULL){
-		printf("Error: Unable to create new XPath context.\n");
+		LOG_ERROR("Error: Unable to create new XPath context.");
 		return -1;
 	}
 
@@ -189,12 +190,12 @@ static int read_request(req_t *req, char *xml_doc_str){
 static int call_target_function(req_t *req, char *resp_buf){
 	if(strcmp(req->function, "get_all_devices") == 0){
 		if(get_all_devices(resp_buf) == -1){
-			printf("Error: get_all_devices returned -1\n");
+			LOG_ERROR("Error: get_all_devices returned -1");
 			return -1;
 		}
 	} else if (strcmp(req->function, "get_device_pin_status")){
 		if(get_device_pin_status(resp_buf, req->data) == -1){
-			printf("Error: get_device_pin_status returned -1\n");
+			LOG_ERROR("Error: get_device_pin_status returned -1");
 			return -1;
 		}
 	}

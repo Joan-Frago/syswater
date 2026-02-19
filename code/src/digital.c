@@ -4,6 +4,7 @@
 
 #include "../inc/unipi_control.h"
 #include "../inc/config.h"
+#include "../inc/logger.h"
 
 int digital_read(di_t *di){
 	char *base_dir = get_var_value(UNIPI_SYS_BASE_DIR);
@@ -12,7 +13,7 @@ int digital_read(di_t *di){
 	// Allocate memory for the file path
 	char *file_path = (char *)malloc(path_len);
 	if(file_path == NULL){
-		perror("Could not allocate memory for file path");
+		LOG_ERROR("Could not allocate memory for file path");
 		return -1;
 	}
 

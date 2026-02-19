@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../inc/config.h"
+#include "../inc/logger.h"
 
 var_t vars[MAX_VARS];
 
@@ -9,12 +10,12 @@ static int set_var_name(var_t *, char *);
 static int set_var_value(var_t *, char *);
 
 int load_config(void){
-	printf("Loading config...\n");
+	LOG_INFO("Loading config...");
 
 	FILE *fp;
 	fp = fopen(CONFIG_FILE_DIR, "r");
 	if(fp == NULL){
-		perror("Error opening config file\n");
+		LOG_ERROR("Error opening config file");
 
 		return -1;
 	}
@@ -46,12 +47,12 @@ int load_config(void){
 			//printf("%s\n",buf);
 			set_var_value(&vars[var_idx], buf);
 
-			printf("+ Variable set: %s = %s\n",vars[var_idx].name,vars[var_idx].value);
+			LOG_INFO("+ Variable set: %s = %s",vars[var_idx].name,vars[var_idx].value);
 			var_idx++;
 		}
 	}
 
-	printf("Finished setting config variables.\n\n");
+	LOG_INFO("Finished setting config variables.");
 
 	fclose(fp);
 	
