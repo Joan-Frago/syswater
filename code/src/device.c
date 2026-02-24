@@ -269,7 +269,7 @@ int get_all_devices(char *resp_buf){
 
 	char c;
 	int i = 0;
-	while((c = getc(fptr)) != EOF && i < MESSAGE_SIZE){
+	while((c = getc(fptr)) != EOF && i < MESSAGE_SIZE-1){
 		resp_buf[i++] = c;
 	}
 	resp_buf[i] = '\0';
@@ -299,24 +299,15 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 		return -1;
 	}
 
+	// TODO: construct response
 	if(device->rl.id_pin){
-		int rl_val = relay_read(&device->rl);
-		if(rl_val == -1){
-			LOG_ERROR("Error: \"device.c\" source file : Seems like the relay couldn\'t read its state.");
-			return -1;
-		}
-	}
 
+	}
 	if(device->di.id_pin){
-		int di_val = digital_read(&device->di);
-		if(di_val == -1){
-			LOG_ERROR("Error: \"device.c\" source file : Seems like the digital input couldn\'t read its state.");
-			return -1;
-		}
-	}
 
-	// TODO: resp_buf
-	resp_buf = "get_device_pin_status: OK";
+	}
+	
+	sprintf(resp_buf, "rl state: %d, di state: %d", device->rl.value, device->di.value);
 
 	return 0;
 }

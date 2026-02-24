@@ -40,7 +40,14 @@ void *start_tcp_server(void* arg){
 	server_addr.sin_port = htons(atoi(get_var_value(TCP_SERVER_PORT)));
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	int ret = bind(sockfd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
+	int opt = 1;
+	int ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	if(ret){
+		LOG_ERROR("Error setting options to the socket");
+		return NULL;
+	}
+
+	ret = bind(sockfd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
 	if(ret < 0){
 		LOG_ERROR("Error creating the socket");
 		return NULL;
@@ -123,7 +130,7 @@ static int talk(int *sockfd){
  */
 static int process_recv(char *recv_buf, char *resp_buf){
 	// printf("Received buffer: %s\n", recv_buf);
-	strcat(resp_buf, "ok\\n");
+	//strcat(resp_buf, "ok");
 
 	req_t req;
 	read_request(&req, recv_buf);
@@ -197,7 +204,7 @@ static int call_target_function(req_t *req, char *resp_buf){
 			LOG_ERROR("Error: get_all_devices returned -1");
 			return -1;
 		}
-	} else if (strcmp(req->function, "get_device_pin_status")){
+	} else if(strcmp(req->function, "get_device_pin_status") == 0){
 		LOG_DEBUG("Request on get_device_pin_status");
 		if(get_device_pin_status(resp_buf, req->data) == -1){
 			LOG_ERROR("Error: get_device_pin_status returned -1");
