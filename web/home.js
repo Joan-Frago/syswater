@@ -1,3 +1,34 @@
+async function get_all_devices(){
+	
+
+	let body = {
+		xml_function: "get_all_devices_xml"
+	};
+
+	try {
+    	const response = await fetch("./request/make_request.php", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(body)
+		});
+
+		if(!response.ok){
+			throw new Error("In \"get_all_devices\" function: Could not fetch devices pin status");
+		}
+
+		const data = await response.text();
+
+		// execute js function here with the data returned by the server.
+		set_devices(data);
+
+		console.log(data);
+	} catch (error) {
+		console.error("Error: ", error);
+	}
+}
+
 function set_devices(devices_xml_str) {
 	let parser = new DOMParser();
 	let devices_xml_doc = parser.parseFromString(devices_xml_str, "application/xml");
@@ -165,23 +196,44 @@ function xml2json(xml, tab) {
 	return "{\n" + tab + (tab ? json.replace(/\t/g, tab) : json.replace(/\t|\n/g, "")) + "\n}";
 }
 
-function get_device_pin_status(){
+async function get_device_pin_status(){
+
+	// loop through devices in the document and get their actual values
+	
+	let id = 1;
+	let data = `<device id=\"${id}\"></device>`;
+
+	let body = {
+		xml_function: "get_device_pin_status_xml",
+		has_data: true,
+		data: data
+	};
+
 	try {
-    	const response = fetch('get_device_pin_status.php', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'text/plain',
-		},
-		body: data
+    	const response = await fetch("./request/make_request.php", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(body)
 		});
 
-		const result = response;
-		console.log('Success:', result);
+		if(!response.ok){
+			throw new Error("In \"get_device_pin_status\" function: Could not fetch devices pin status");
+		}
+
+		const data = await response.text();
+
+		// execute js function here with the data returned by the server.
+		// example:
+		// set_devices(data)
+
+		console.log("--- get_device_pin_status ---");
+		console.log(data);
 	} catch (error) {
-		console.error('Error:', error);
+		console.error("Error: ", error);
 	}
 }
-
 
 function load_pin_data(){
 	setInterval(get_device_pin_status, 3000);

@@ -28,10 +28,10 @@
 	</main>
 	
 	<div class="invisible">
-		<?php get_all_devices(); ?>
 	</div>
 
 	<script>
+		get_all_devices();
 		load_pin_data();
 	</script>
 </body>

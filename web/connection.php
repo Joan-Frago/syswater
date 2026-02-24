@@ -2,8 +2,8 @@
 require_once "util.php";
 error_reporting(E_ALL);
 
-function server_connect(){
-	write2console("Connecting to TCP server...");
+function server_connect($silent = true){
+	if(!$silent) write2console("Connecting to TCP server...");
 
 	$address = 'msi';
 	//$address = 'unipi';
@@ -20,16 +20,16 @@ function server_connect(){
 		write2console("socket_connect() failed. Reason: ($result) " . socket_strerror(socket_last_error($socket)));
 		return -1;
 	}
-	write2console("Connected to server on ".$address.":".$service_port);
+	if(!$silent) write2console("Connected to server on ".$address.":".$service_port);
 
 	return $socket;
 }
 
-function server_close($socket){
+function server_close($socket, $silent = true){
 	if($socket){
 		socket_close($socket);
 	}
-	write2console("Closed connection with server.");
+	if(!$silent) write2console("Closed connection with server.");
 	return 0;
 }
 
