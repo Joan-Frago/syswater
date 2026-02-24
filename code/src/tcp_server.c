@@ -84,7 +84,9 @@ static int talk(int *sockfd){
 	while(1){
 		// Receive a message
 		char recv_buf[MESSAGE_SIZE];
-		ssize_t bytes_recv = recv(*sockfd, recv_buf, MESSAGE_SIZE, 0);
+		memset(recv_buf, 0, strlen(recv_buf)); // Set the buffer to 0 aka "empty the string"
+
+		ssize_t bytes_recv = recv(*sockfd, recv_buf, MESSAGE_SIZE-1, 0);
 		if(bytes_recv == 0){
 			// printf("Client closed connection\n");
 			break;
@@ -92,6 +94,8 @@ static int talk(int *sockfd){
 			LOG_ERROR("Error receiving data");
 			break;
 		}
+
+		recv_buf[bytes_recv] = '\0';
 
 		// Buffer where the response will be stored
 		char resp_buf[MESSAGE_SIZE];
@@ -102,7 +106,7 @@ static int talk(int *sockfd){
 		}
 
 		// Escape response buffer
-		escape_buf(resp_buf, strlen(resp_buf));
+		//escape_buf(resp_buf, strlen(resp_buf));
 
 		// Send a response
 		send(*sockfd, resp_buf, strlen(resp_buf), 0);
