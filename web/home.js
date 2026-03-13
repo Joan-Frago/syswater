@@ -1,43 +1,91 @@
-async function get_all_devices(){
+classes = {
+	INVISIBLE: "invisible"
+};
+
+// async function get_all_devices(){
+//
+//
+// 	let body = {
+// 		xml_function: "get_all_devices_xml"
+// 	};
+//
+// 	try {
+//     	const response = await fetch("./request/make_request.php", {
+// 			method: 'POST',
+// 			headers: {
+// 				'Content-Type': 'application/json',
+// 			},
+// 			body: JSON.stringify(body)
+// 		});
+//
+// 		if(!response.ok){
+// 			throw new Error("In \"get_all_devices\" function: Could not fetch devices pin status");
+// 		}
+//
+// 		const data = await response.text();
+//
+// 		// execute js function here with the data returned by the server.
+// 		set_devices(data);
+//
+// 	} catch (error) {
+// 		console.error("Error: ", error);
+// 	}
+// }
+//
+// function set_devices(devices_xml_str) {
+// 	let parser = new DOMParser();
+// 	let devices_xml_doc = parser.parseFromString(devices_xml_str, "application/xml");
+//
+// 	let devices_json = xml2json(devices_xml_doc, "");
+//
+// 	devices_json = JSON.parse(devices_json);
+// }
+
+async function set_all_devices(){
+	// loop through devices in the document and get their config
+	const devices_arr = document.querySelectorAll("section.device");
+
+	devices_arr.forEach(async (device) => {
+		let data = `<device id=\"${device.id}\"></device>`;
 	
+		let body = {
+			xml_function: "get_device_xml",
+			has_data: true,
+			data: data
+		};
 
-	let body = {
-		xml_function: "get_all_devices_xml"
-	};
+		try {
+			const response = await fetch("./request/make_request.php", {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(body)
+			});
 
-	try {
-    	const response = await fetch("./request/make_request.php", {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(body)
-		});
+			if(!response.ok){
+				throw new Error("In \"set_all_devices\" function: Could not fetch devices pin status");
+			}
 
-		if(!response.ok){
-			throw new Error("In \"get_all_devices\" function: Could not fetch devices pin status");
+			const data = await response.text();
+
+			// execute js function here with the data returned by the server.
+			set_device(data);
+
+		} catch (error) {
+			console.error("Error: ", error);
 		}
-
-		const data = await response.text();
-
-		// execute js function here with the data returned by the server.
-		set_devices(data);
-
-		//console.log(data);
-	} catch (error) {
-		console.error("Error: ", error);
-	}
+	});
 }
 
-function set_devices(devices_xml_str) {
+function set_device(devices_xml_str) {
 	let parser = new DOMParser();
 	let devices_xml_doc = parser.parseFromString(devices_xml_str, "application/xml");
 
 	let devices_json = xml2json(devices_xml_doc, "");
-	console.log(devices_json);
 
 	devices_json = JSON.parse(devices_json);
-	console.log(devices_json);
+    console.log(devices_json);
 }
 
 /*	This work is licensed under Creative Commons GNU LGPL License.
@@ -230,32 +278,99 @@ async function get_device_pin_status(){
 			// example:
 			// set_devices(data)
 
-			console.log("--- get_device_pin_status ---");
-			//console.log(data);
-
 			let parser = new DOMParser();
 			let xml_doc = parser.parseFromString(data, "application/xml");
 
 			let json = xml2json(xml_doc, "");
-			console.log(json);
-
 			json = JSON.parse(json);
-			console.log(json);
 
-			update_device_pin_status(json);
+			construct_device(json.device);
+			update_device(json.device);
+
 		} catch (error) {
 			console.error("Error: ", error);
 		}
 	});
 }
 
+function construct_device(device){
+	device.has_rl = () => device.hasOwnProperty("relay");
+	device.has_di = () => device.hasOwnProperty("digital_input");
+}
+
+function update_device(device){
+	update_device_pin_status(device);
+	update_device_svg(device);
+}
+
 function update_device_pin_status(device){
-	const element = document.getElementById(device.device["@id"]);
-	console.log(element);
+	if(device.has_di()){
+		const input = document.getElementById(device.digital_input["@id_pin"]);
+		input.textContent = "Input: " + device.digital_input["@value"];
+	}
 
+	if(device.has_rl()){
+		const output = document.getElementById(device.relay["@id_pin"]);
+		output.textContent = "Output: " + device.relay["@value"];
+	}
+}
 
+function update_device_svg(device){
+	// get device svg ( id device + device type )
+	const svg = document.getElementById(device["@id"] + device["@type"]);
+
+	// depending of its type execute a function that updates that type of svg
+	switch(device["@type"]){
+		case "BLIND": 		update_svg_blind(device, svg); break;
+		case "LIGHT_BULB": 	update_svg_light_bulb(device, svg); break;
+		default: break;
+	}
+}
+
+function update_svg_blind(device, svg){
+	if(device.has_rl()){
+		if(device.relay["@value"] == 1){
+			let blank = document.getElementById(device["@id"] + "_blank");
+			blank.classList.remove(classes.INVISIBLE);
+		}
+		else {
+			let blank = document.getElementById(device["@id"] + "_blank");
+			blank.classList.add(classes.INVISIBLE);
+		}
+	}
+}
+
+function update_svg_light_bulb(device, svg){
+	const bulb_glow  = document.getElementById(device["@id"]+"_bulb_glow");
+	const bulb_color = document.getElementById(device["@id"]+"_path");
+	
+	if(device.has_di()){
+		if(device.digital_input["@value"] == 1){
+			bulb_glow.classList.remove(classes.INVISIBLE);
+			bulb_color.setAttribute("fill", "url(#"+device["@type"]+"_color)");
+		}
+		else {
+			bulb_glow.classList.add(classes.INVISIBLE);
+			bulb_color.setAttribute("fill", "#FFF");
+		}
+	}
 }
 
 function load_pin_data(){
 	setInterval(get_device_pin_status, 3000);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

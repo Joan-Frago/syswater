@@ -15,6 +15,7 @@
 
 typedef struct Device{
 	int id;
+	char *type;
 	char *name;
 	char *description;
 	historify_t hist;
@@ -33,5 +34,6 @@ int get_all_devices(char *resp_buf);
 int get_device_pin_status(char *resp_buf, xmlNode *);
 
 int set_device(xmlNode *);
+int get_device(char *resp_buf, xmlNode *data);
 
 #endif

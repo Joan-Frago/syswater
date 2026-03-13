@@ -15,6 +15,7 @@ static xmlNode *read_devices_xml_by_id(int id);
 static int read_devices_xml();
 
 static int read_device_id(device_t *device, xmlNode *);
+static int read_device_type(device_t *device, xmlXPathContext *);
 static int read_device_name(device_t *device, xmlXPathContext *);
 static int read_device_description(device_t *device, xmlXPathContext *);
 static int read_device_historify(device_t *device, xmlXPathContext *);
@@ -73,6 +74,7 @@ static int read_devices_xml(){
 
 			struct Device *dev_ptr = &devices[dev_idx];
 			read_device_id(dev_ptr, device);
+			read_device_type(dev_ptr, dxml->xpath_context);
 			read_device_name(dev_ptr, dxml->xpath_context);
 			read_device_description(dev_ptr, dxml->xpath_context);
 			read_device_historify(dev_ptr, dxml->xpath_context);
@@ -123,6 +125,21 @@ static int read_device_id(device_t *device, xmlNode *dev_node){
 	//printf("Device [%d]\n", device->id);
 
 	xmlFree(id);
+	return 0;
+}
+
+static int read_device_type(device_t *device, xmlXPathContext *xpath_ctx){
+	char *expr = "./type";
+	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
+
+	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
+	xmlChar *content = xmlNodeGetContent(node);
+
+	device->type = strdup((char *)content);
+
+	xmlFree(content);
+	xmlXPathFreeObject(xpath_obj);
+
 	return 0;
 }
 
@@ -302,9 +319,8 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 
 	StringBuilder *sb = sb_create();
 
-	sb_appendf(sb, "<device id=\"%d\">", device->id);
+	sb_appendf(sb, "<device id=\"%d\" name=\"%s\" description=\"%s\" type=\"%s\">", device->id, device->name, device->description, device->type);
 
-	// TODO: construct response
 	if(device->rl.id_pin)
 		sb_appendf(sb, "<relay id_pin=\"%s\" pin=\"%s\" value=\"%d\"></relay>", device->rl.id_pin, device->rl.pin, device->rl.value);
 
@@ -333,5 +349,58 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 int set_device(xmlNode *dev_node){
 	LOG_DEBUG("Setting device...\n");
 
+	return 0;
+}
+
+int get_device(char *resp_buf, xmlNode *data){
+	// extract device id from the xml node
+	
+	xmlNode *tmp_node = find_child_node(data, BAD_CAST "device");
+	if(tmp_node == NULL){
+		LOG_ERROR("Error: device.c : Did not find a child node called \"device\"");
+		return -1;
+	}
+
+	device_t tmp_dev;
+	if(read_device_id(&tmp_dev, tmp_node) != 0){
+		LOG_ERROR("Error: device.c : Could not read the device id");
+		return -1;
+	}
+
+	device_t *device = get_device_by_id(tmp_dev.id);
+
+	// Construct response
+	StringBuilder *sb = sb_create();
+
+	sb_appendf(sb, "<device id=\"%d\">", device->id);
+	sb_appendf(sb, "<type>%s</type>", device->type);
+	sb_appendf(sb, "<name>%s</name>", device->name);
+	sb_appendf(sb, "<description>%s</description>", device->description);
+
+	if(device->rl.id_pin)
+		sb_appendf(sb, "<relay id_pin=\"%s\" pin=\"%s\" value=\"%d\"></relay>", device->rl.id_pin, device->rl.pin, device->rl.value);
+
+	if(device->di.id_pin)
+		sb_appendf(sb, "<digital_input id_pin=\"%s\" pin=\"%s\" value=\"%d\"></digital_input>", device->di.id_pin, device->di.pin, device->di.value);
+	
+	sb_append(sb, "</device>");
+
+	/*
+	* <device id="...">
+	*	<type>...</type>
+	*	<name>...</name>
+	*	<description>...</description>
+	*	<relay id_pin="..." pin="..." value="..."></relay>
+	*	<digital_input id_pin="..." pin="..." value="..."></digital_input>
+	* </device>
+	*/
+
+	char *temp = sb_concat(sb);
+	if(temp){
+		strncpy(resp_buf, temp, MESSAGE_SIZE);
+		free(temp);
+	}
+	sb_free(sb);
+	
 	return 0;
 }

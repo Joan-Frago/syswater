@@ -1,7 +1,8 @@
 <devices>
 	<device id="1">
-		<name>Calefacció</name>
-		<description>Càrrega calefacció</description>
+		<type>BLIND</type>
+		<name>Persiana</name>
+		<description>Persiana habitació papas</description>
 		<historify active="1" period="0"></historify>
 		<fire active="1" period="12">
 			<date>
@@ -15,8 +16,9 @@
 	</device>
 
 	<device id="2">
-		<name>Device 2</name>
-		<description></description>
+		<type>LIGHT_BULB</type>
+		<name>Llum</name>
+		<description>Llum de proves</description>
 		<historify active="1" period="0"></historify>
 		<fire active="0" period="12">
 			<date>
@@ -31,6 +33,7 @@
 
 	<device id="3">
 		<name>Device 3</name>
+		<type></type>
 		<description></description>
 		<historify active="1" period="0"></historify>
 		<fire active="0" period="12">

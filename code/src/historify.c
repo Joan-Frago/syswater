@@ -3,7 +3,7 @@
 #include "../inc/unipi_control.h"
 #include "../inc/device.h"
 
-#define LOG_HISTORIFY
+// #define LOG_HISTORIFY
 
 int historify_device(device_t *device){
 	if(device->hist.active == 1){
