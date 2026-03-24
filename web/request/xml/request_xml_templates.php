@@ -26,4 +26,13 @@ function get_device_xml($data){
 
 	return $xml;
 }
+function update_pin_state_xml($data){
+	$xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	$xml .= "<request>\n";
+	$xml .= "<function>update_pin_state</function>\n";
+	$xml .= "<data>".$data."</data>";
+	$xml .= "</request>";
+
+	return $xml;
+}
 ?>

@@ -1,5 +1,7 @@
 #ifndef DEVICE_H
 
+#include <stdint.h>
+
 #include "./unipi_control.h"
 
 #include <libxml2/libxml/parser.h>
@@ -15,6 +17,9 @@
 
 typedef struct Device{
 	int id;
+	int has_mb;
+	int has_di;
+	int has_rl;
 	char *type;
 	char *name;
 	char *description;
@@ -23,6 +28,7 @@ typedef struct Device{
 
 	rl_t rl;
 	di_t di;
+	mb_t mb;
 } device_t;
 
 int set_devices();
@@ -35,5 +41,7 @@ int get_device_pin_status(char *resp_buf, xmlNode *);
 
 int set_device(xmlNode *);
 int get_device(char *resp_buf, xmlNode *data);
+
+int update_pin_state(char *resp_buf, xmlNode *data);
 
 #endif

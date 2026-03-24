@@ -17,7 +17,7 @@
 
 	<device id="2">
 		<type>LIGHT_BULB</type>
-		<name>Llum</name>
+		<name>Llum 1</name>
 		<description>Llum de proves</description>
 		<historify active="1" period="0"></historify>
 		<fire active="0" period="12">
@@ -32,9 +32,9 @@
 	</device>
 
 	<device id="3">
-		<name>Device 3</name>
-		<type></type>
-		<description></description>
+		<type>ANALYZER</type>
+		<name>Consum</name>
+		<description>Consum elèctric</description>
 		<historify active="1" period="0"></historify>
 		<fire active="0" period="12">
 			<date>
@@ -43,6 +43,6 @@
 			</date>
 		</fire>
 
-		<digital_input id_pin="DI2.1" pin="2.1"></digital_input>
+		<modbus connection_type="TCP" slave="1"></modbus>
 	</device>
 </devices>

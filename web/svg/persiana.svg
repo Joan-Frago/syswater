@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
 <svg
-   id="#@ID_DEVICE@#_persiana"
+   id="#@ID_DEVICE@#_#@DEVICE_TYPE@#"
    device_type="#@DEVICE_TYPE@#"
+   width="#@WIDTH@#"
+   height="#@HEIGHT@#"
    viewBox="0 0 500 450"
    version="1.1"
    xmlns="http://www.w3.org/2000/svg"

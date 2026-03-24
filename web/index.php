@@ -17,29 +17,9 @@
 	</header>
 	<main class="house-grid">
 
-		<section id="1" class="device">
-			<div class="device-svg">
-				<?php insert_svg("svg/persiana.svg", 1, "BLIND"); ?>
-			</div>
-			<h2>Persiana Dormitorio</h2>
-			<button class="device-btn off">Bajada</button>
-			<div>
-				<p id="DI1.4">Input: </p>
-				<p id="RO2.1">Output: </p>
-			</div>
-		</section>
-
-		<section id="2" class="device">
-			<div class="device-svg">
-				<?php insert_svg("svg/bulb.svg", 2, "LIGHT_BULB"); ?>
-			</div>
-			<h2>Llum de proves</h2>
-			<button class="device-btn off">Off</button>
-			<div>
-				<p id="DI1.2">Input: </p>
-				<p id="RO2.2">Output: </p>
-			</div>
-		</section>
+		<?php insert_svg(svg_path: "svg/persiana.svg", 			id_device: 1, device_type: "BLIND",      width: 160, height: 160); ?>
+		<?php insert_svg(svg_path: "svg/bulb.svg",     			id_device: 2, device_type: "LIGHT_BULB", width: 120, height: 170); ?>
+		<?php insert_svg(svg_path: "svg/Circutor-CVM-MINI.svg",	id_device: 3, device_type: "ANALYZER", 	 width: 200, height: 240); ?>
 
 	</main>
 	
@@ -47,7 +27,6 @@
 	</div>
 
 	<script>
-		// get_all_devices();
 		set_all_devices();
 		load_pin_data();
 	</script>

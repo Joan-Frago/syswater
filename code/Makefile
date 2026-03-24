@@ -9,6 +9,7 @@ TARGET = $(BINDIR)/unipi_main
 OBJS   = $(OBJDIR)/main.o \
 		 $(OBJDIR)/digital.o \
 		 $(OBJDIR)/relay.o \
+		 $(OBJDIR)/modbus.o \
 		 $(OBJDIR)/config.o \
 		 $(OBJDIR)/tcp_server.o \
 		 $(OBJDIR)/device.o \
@@ -22,16 +23,18 @@ OBJS   = $(OBJDIR)/main.o \
 XML2_CFLAGS = $(shell xml2-config --cflags)
 XML2_LIBS = $(shell xml2-config --libs)
 
-CFLAGS = -Wall -I$(INCDIR) $(XML2_CFLAGS)
+LIBMODBUS_CFLAGS = $(shell pkg-config --cflags --libs libmodbus)
+
+CFLAGS = -Wall -I$(INCDIR) $(XML2_CFLAGS) $(LIBMODBUS_CFLAGS)
 LDFLAGS = $(XML2_LIBS)
 
 native: CC = gcc
 native: $(TARGET)
-	@echo "\n --> Compiled for x86-64"
+	@echo " --> Compiled for x86-64"
 
 arm: CC = arm-linux-gnueabihf-gcc
 arm: $(TARGET)
-	@echo "\n --> Compiled for ARM"
+	@echo " --> Compiled for ARM"
 
 $(TARGET) : $(OBJS)
 	@mkdir -p $(BINDIR)

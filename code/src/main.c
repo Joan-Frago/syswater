@@ -71,7 +71,7 @@ static void exit_handler(int signal){
  * actions have to be done.
  */
 static void *core(void* arg){
-	printf("Core Thread ID is %lu\n",(unsigned long)pthread_self());
+	LOG_INFO("Core Thread ID is %lu",(unsigned long)pthread_self());
 
 	device_t *devices = get_devices_arr();
 

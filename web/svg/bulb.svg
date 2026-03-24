@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg
-	id="#@ID_DEVICE@#_bulb"
+	id="#@ID_DEVICE@#_#@DEVICE_TYPE@#"
 	device_type="#@DEVICE_TYPE@#"
+	width="#@WIDTH@#"
+	height="#@HEIGHT@#"
 	xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.w3.org/2000/svg"

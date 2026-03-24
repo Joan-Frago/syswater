@@ -7,6 +7,9 @@ venv*
 # pycache
 *__pycache__/
 
+# go
+go.*
+
 # conf files
 home-auto-web/config/conf.json
 

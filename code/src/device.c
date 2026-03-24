@@ -8,12 +8,14 @@
 #include "../inc/device_xml.h"
 #include "../inc/logger.h"
 #include "../inc/sb.h"
+#include "../inc/config.h"
 
 device_t devices[MAX_DEVICES];
 
 static xmlNode *read_devices_xml_by_id(int id);
 static int read_devices_xml();
 
+static xmlChar *read_node_prop(xmlNode *dev_node, const char *prop);
 static int read_device_id(device_t *device, xmlNode *);
 static int read_device_type(device_t *device, xmlXPathContext *);
 static int read_device_name(device_t *device, xmlXPathContext *);
@@ -23,7 +25,7 @@ static int read_device_fire(device_t *device, xmlXPathContext *);
 static int read_device_fire_date(device_t *device, xmlXPathContext *);
 static int read_device_relay(device_t *device, xmlXPathContext *);
 static int read_device_digital_input(device_t *device, xmlXPathContext *);
-
+static int read_device_modbus(device_t *device, xmlXPathContext *);
 
 /*
  * Set all devices before running.
@@ -41,17 +43,44 @@ int set_devices(){
 	// static configuration
 	int i;
 	for(i=0; i<MAX_DEVICES; i++){
+		if(devices[i].type == NULL) continue;
+		
 		devices[i].hist.remaining_ticks = devices[i].hist.period;
 		devices[i].fire.remaining_ticks = devices[i].hist.period*3600;
 
 		if(devices[i].rl.id_pin){
+			devices[i].has_rl = 1;
 			devices[i].rl.value = relay_read(&devices[i].rl);
 			devices[i].rl.last_value = devices[i].rl.value;
 		}
+		else {
+			devices[i].has_rl = 0;
+		}
 
 		if(devices[i].di.id_pin){
+			devices[i].has_di = 1;
 			devices[i].di.value = digital_read(&devices[i].di);
 			devices[i].di.last_value = devices[i].di.value;
+		}
+		else {
+			devices[i].has_di = 0;
+		}
+
+		if(strcmp(devices[i].type, "ANALYZER") == 0){
+			devices[i].has_mb = 1;
+			devices[i].mb.tcp_addr = get_var_value(MODBUS_TCP_ADDR);
+			devices[i].mb.tcp_port = atoi(get_var_value(MODBUS_TCP_PORT));
+
+			analyzer_set_registers(devices[i].mb.registers);
+
+			int j;
+			for(j=0; j<REGISTER_COUNT; j++){
+				devices[i].mb.registers[j].value = modbus_read(devices[i].mb, devices[i].mb.registers[j]);
+				devices[i].mb.registers[j].last_value = devices[i].mb.registers[j].value;
+			}
+		}
+		else{
+			devices[i].has_mb = 0;
 		}
 	}
 
@@ -78,9 +107,17 @@ static int read_devices_xml(){
 			read_device_name(dev_ptr, dxml->xpath_context);
 			read_device_description(dev_ptr, dxml->xpath_context);
 			read_device_historify(dev_ptr, dxml->xpath_context);
-			read_device_fire(dev_ptr, dxml->xpath_context);
+
+			if(strcmp(dev_ptr->type, "ANALYZER") != 0){
+				read_device_fire(dev_ptr, dxml->xpath_context);
+			}
+
 			read_device_relay(dev_ptr, dxml->xpath_context);
 			read_device_digital_input(dev_ptr, dxml->xpath_context);
+
+			if(strcmp(dev_ptr->type, "ANALYZER") == 0){
+				read_device_modbus(dev_ptr, dxml->xpath_context);
+			}
 
 			dev_idx++;
 		}
@@ -117,6 +154,12 @@ static xmlNode *read_devices_xml_by_id(int id){
 	close_devices_xml_file(dxml);
 
 	return found_device;
+}
+
+static xmlChar *read_node_prop(xmlNode *node, const char *prop){
+	xmlChar *_prop = xmlGetProp(node, BAD_CAST prop);
+
+	return _prop;
 }
 
 static int read_device_id(device_t *device, xmlNode *dev_node){
@@ -260,6 +303,30 @@ static int read_device_digital_input(device_t *device, xmlXPathContext *xpath_ct
 	return 0;
 }
 
+static int read_device_modbus(device_t *device, xmlXPathContext *xpath_ctx){
+	xmlXPathObjectPtr xpath_obj_mb = xmlXPathEvalExpression(BAD_CAST "./modbus", xpath_ctx);
+	if(xpath_obj_mb && !xmlXPathNodeSetIsEmpty(xpath_obj_mb->nodesetval)){
+		xmlNode *node_mb = xpath_obj_mb->nodesetval->nodeTab[0];
+
+		char *mb_con_type = (char *)xmlGetProp(node_mb, BAD_CAST "connection_type");
+		if(strcmp(mb_con_type, "TCP") == 0){
+			device->mb.connection_type = TCP;
+		}
+		else if(strcmp(mb_con_type, "RS485") == 0){
+			device->mb.connection_type = RS485;
+		}
+		else {
+			LOG_ERROR("Invalid modbus connection type \"%s\". Can not read modbus node in config xml file.", mb_con_type);
+			return -1;
+		}
+
+		device->mb.slave = atoi((char *)xmlGetProp(node_mb, BAD_CAST "slave"));
+	}
+	if(xpath_obj_mb) xmlXPathFreeObject(xpath_obj_mb);
+
+	return 0;
+}
+
 device_t *get_devices_arr(void){
 	return devices;
 }
@@ -321,20 +388,22 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 
 	sb_appendf(sb, "<device id=\"%d\" name=\"%s\" description=\"%s\" type=\"%s\">", device->id, device->name, device->description, device->type);
 
-	if(device->rl.id_pin)
+	if(device->has_rl == 1)
 		sb_appendf(sb, "<relay id_pin=\"%s\" pin=\"%s\" value=\"%d\"></relay>", device->rl.id_pin, device->rl.pin, device->rl.value);
 
-	if(device->di.id_pin)
+	if(device->has_di == 1)
 		sb_appendf(sb, "<digital_input id_pin=\"%s\" pin=\"%s\" value=\"%d\"></digital_input>", device->di.id_pin, device->di.pin, device->di.value);
+
+	if(device->has_mb == 1){
+		sb_append(sb, "<modbus>");
+		int i;
+		for(i=0; i<REGISTER_COUNT; i++){
+			sb_appendf(sb, "<register name=\"%s\" value=\"%u\"></register>", device->mb.registers[i].name, device->mb.registers[i].value);
+		}
+		sb_append(sb, "</modbus>");
+	}
 	
 	sb_append(sb, "</device>");
-
-	/*
-	* <device id="...">
-	*	<relay id_pin="..." pin="..." value="..."></relay>
-	*	<digital_input id_pin="..." pin="..." value="..."></digital_input>
-	* </device>
-	*/
 
 	char *temp = sb_concat(sb);
 	if(temp){
@@ -368,32 +437,23 @@ int get_device(char *resp_buf, xmlNode *data){
 	}
 
 	device_t *device = get_device_by_id(tmp_dev.id);
+	if(device == NULL)
+		return -1;
 
 	// Construct response
 	StringBuilder *sb = sb_create();
 
-	sb_appendf(sb, "<device id=\"%d\">", device->id);
-	sb_appendf(sb, "<type>%s</type>", device->type);
+	sb_appendf(sb, "<device id=\"%d\" type=\"%s\">", device->id, device->type);
 	sb_appendf(sb, "<name>%s</name>", device->name);
 	sb_appendf(sb, "<description>%s</description>", device->description);
 
-	if(device->rl.id_pin)
+	if(device->has_rl == 1)
 		sb_appendf(sb, "<relay id_pin=\"%s\" pin=\"%s\" value=\"%d\"></relay>", device->rl.id_pin, device->rl.pin, device->rl.value);
 
-	if(device->di.id_pin)
+	if(device->has_di == 1)
 		sb_appendf(sb, "<digital_input id_pin=\"%s\" pin=\"%s\" value=\"%d\"></digital_input>", device->di.id_pin, device->di.pin, device->di.value);
 	
 	sb_append(sb, "</device>");
-
-	/*
-	* <device id="...">
-	*	<type>...</type>
-	*	<name>...</name>
-	*	<description>...</description>
-	*	<relay id_pin="..." pin="..." value="..."></relay>
-	*	<digital_input id_pin="..." pin="..." value="..."></digital_input>
-	* </device>
-	*/
 
 	char *temp = sb_concat(sb);
 	if(temp){
@@ -402,5 +462,34 @@ int get_device(char *resp_buf, xmlNode *data){
 	}
 	sb_free(sb);
 	
+	return 0;
+}
+
+int update_pin_state(char *resp_buf, xmlNode *data){
+	xmlNode *tmp_node = find_child_node(data, BAD_CAST "device");
+	if(tmp_node == NULL){
+		LOG_ERROR("Error: device.c : Did not find a child node called \"device\"");
+		return -1;
+	}
+
+	device_t tmp_dev;
+	if(read_device_id(&tmp_dev, tmp_node) != 0){
+		LOG_ERROR("Error: device.c : Could not read the device id");
+		return -1;
+	}
+
+	xmlChar *new_state = read_node_prop(tmp_node, "new_state");
+	if(new_state == NULL){
+		LOG_ERROR("Error: device.c : Could not read new_state property from node");
+		return -1;
+}
+
+	device_t *device = get_device_by_id(tmp_dev.id);
+	if(device == NULL)
+		return -1;
+
+	relay_write(&device->rl, atoi((char *)new_state));
+	// it is independent of historification so I don't need to manually update rl.value nor rl.last_value
+
 	return 0;
 }

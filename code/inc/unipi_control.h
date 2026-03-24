@@ -1,7 +1,31 @@
 #ifndef UNIPI_CONTROL_H
 #define UNIPI_CONTROL_H
 
+#include <stdint.h>
+
 #define XML_XPATH_EXPR_SIZE 255
+
+typedef enum MB_CONNECTION_TYPE {
+	TCP,
+	RS485
+} mb_con_t;
+
+#define REGISTER_COUNT 2
+
+typedef struct {
+	char *name;
+	int id;
+	uint32_t value;
+	uint32_t last_value;
+} reg_t;
+
+typedef struct {
+	int slave;
+	int tcp_port;
+	char *tcp_addr;
+	mb_con_t connection_type;
+	reg_t registers[REGISTER_COUNT];
+} mb_t;
 
 typedef struct Relay{
 	char *id_pin; // e.g. RO2.1
@@ -40,5 +64,8 @@ int relay_write(rl_t *, int);
 int relay_read(rl_t *);
 
 int digital_read(di_t *);
+
+void analyzer_set_registers(reg_t registers[REGISTER_COUNT]);
+uint32_t modbus_read(mb_t, reg_t);
 
 #endif

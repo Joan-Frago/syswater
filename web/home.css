@@ -31,6 +31,7 @@ body {
 	text-align: center;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	align-content: center;
 }
 
 .device:hover {
@@ -39,8 +40,6 @@ body {
 }
 
 .device-svg {
-	width: 80px;
-	height: 80px;
 	margin: 0 auto 1rem;
 }
 

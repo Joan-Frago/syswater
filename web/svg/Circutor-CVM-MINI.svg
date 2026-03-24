@@ -1,0 +1,57 @@
+<svg
+	id="#@ID_DEVICE@#_#@DEVICE_TYPE@#"
+	device_type="#@DEVICE_TYPE@#"
+	width="#@WIDTH@#"
+	height="#@HEIGHT@#"
+	viewBox="0 0 400 500"
+	xmlns="http://www.w3.org/2000/svg">
+
+  <rect x="50" y="40" width="300" height="420" rx="10" fill="#e6e6e6" stroke="#999"/>
+
+  <rect x="80" y="20" width="240" height="40" rx="5" fill="#d0d0d0" stroke="#888"/>
+  <g fill="#777">
+    <circle cx="110" cy="40" r="6"/>
+    <circle cx="140" cy="40" r="6"/>
+    <circle cx="170" cy="40" r="6"/>
+    <circle cx="200" cy="40" r="6"/>
+    <circle cx="230" cy="40" r="6"/>
+    <circle cx="260" cy="40" r="6"/>
+    <circle cx="290" cy="40" r="6"/>
+  </g>
+
+  <rect x="80" y="100" width="240" height="150" rx="8" fill="#ffb347" stroke="#aa7a00"/>
+
+  <g font-family="monospace" font-size="38" fill="#333">
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field1" x="100" y="150"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field2" x="100" y="190"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field3" x="100" y="230"></text>
+  </g>
+
+  <text x="80" y="80" font-size="16" fill="#c00" font-weight="bold">CIRCUTOR</text>
+  <text x="200" y="80" font-size="14" fill="#000">CVM-MINI</text>
+
+  <g fill="#b00">
+    <circle cx="100" cy="300" r="12"/>
+    <circle cx="140" cy="300" r="12"/>
+    <circle cx="180" cy="300" r="12"/>
+    <circle cx="220" cy="300" r="12"/>
+  </g>
+
+  <g font-size="10" fill="#333" text-anchor="middle">
+    <text x="100" y="330">reset</text>
+    <text x="140" y="330">setup</text>
+    <text x="180" y="330">energy</text>
+    <text x="220" y="330">max pd</text>
+  </g>
+
+  <rect x="80" y="440" width="240" height="40" rx="5" fill="#d0d0d0" stroke="#888"/>
+  <g fill="#777">
+    <circle cx="110" cy="460" r="6"/>
+    <circle cx="140" cy="460" r="6"/>
+    <circle cx="170" cy="460" r="6"/>
+    <circle cx="200" cy="460" r="6"/>
+    <circle cx="230" cy="460" r="6"/>
+    <circle cx="260" cy="460" r="6"/>
+    <circle cx="290" cy="460" r="6"/>
+  </g>
+</svg>

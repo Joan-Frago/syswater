@@ -9,6 +9,8 @@
 
 #define UNIPI_SYS_BASE_DIR "UNIPI_SYS_BASE_DIR"
 #define TCP_SERVER_PORT "TCP_SERVER_PORT"
+#define MODBUS_TCP_ADDR "MODBUS_TCP_ADDR"
+#define MODBUS_TCP_PORT "MODBUS_TCP_PORT"
 
 typedef struct Var{
 	char name[MAX_VAR_SIZE];
