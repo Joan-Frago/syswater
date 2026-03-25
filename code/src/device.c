@@ -15,8 +15,8 @@ device_t devices[MAX_DEVICES];
 static xmlNode *read_devices_xml_by_id(int id);
 static int read_devices_xml();
 
-static xmlChar *read_node_prop(xmlNode *dev_node, const char *prop);
-static int read_device_id(device_t *device, xmlNode *);
+static char *read_node_prop(xmlNode *dev_node, const char *prop);
+static int read_device_id(xmlNode *);
 static int read_device_type(device_t *device, xmlXPathContext *);
 static int read_device_name(device_t *device, xmlXPathContext *);
 static int read_device_description(device_t *device, xmlXPathContext *);
@@ -102,7 +102,7 @@ static int read_devices_xml(){
 			dxml->xpath_context->node = device;
 
 			struct Device *dev_ptr = &devices[dev_idx];
-			read_device_id(dev_ptr, device);
+			dev_ptr->id = read_device_id(device);
 			read_device_type(dev_ptr, dxml->xpath_context);
 			read_device_name(dev_ptr, dxml->xpath_context);
 			read_device_description(dev_ptr, dxml->xpath_context);
@@ -143,7 +143,7 @@ static xmlNode *read_devices_xml_by_id(int id){
 
 			dxml->xpath_context->node = device;
 			
-			read_device_id(&dev_ptr, device);
+			dev_ptr.id = read_device_id(device);
 
 			if(dev_ptr.id == id){
 				found_device = device;
@@ -156,19 +156,16 @@ static xmlNode *read_devices_xml_by_id(int id){
 	return found_device;
 }
 
-static xmlChar *read_node_prop(xmlNode *node, const char *prop){
+static char *read_node_prop(xmlNode *node, const char *prop){
 	xmlChar *_prop = xmlGetProp(node, BAD_CAST prop);
 
-	return _prop;
+	return (char *)_prop;
 }
 
-static int read_device_id(device_t *device, xmlNode *dev_node){
-	xmlChar *id = xmlGetProp(dev_node, BAD_CAST "id");
-	device->id = char2int((char *)id);
-	//printf("Device [%d]\n", device->id);
+static int read_device_id(xmlNode *dev_node){
+	char *id = read_node_prop(dev_node, "id");
 
-	xmlFree(id);
-	return 0;
+	return atoi(id);
 }
 
 static int read_device_type(device_t *device, xmlXPathContext *xpath_ctx){
@@ -373,10 +370,7 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 	}
 
 	device_t tmp_dev;
-	if(read_device_id(&tmp_dev, dev_node) != 0){
-		LOG_ERROR("Error: device.c : Could not read the device id");
-		return -1;
-	}
+	tmp_dev.id = read_device_id(dev_node);
 	
 	device_t *device = get_device_by_id(tmp_dev.id);
 	if(device == NULL){
@@ -431,10 +425,7 @@ int get_device(char *resp_buf, xmlNode *data){
 	}
 
 	device_t tmp_dev;
-	if(read_device_id(&tmp_dev, tmp_node) != 0){
-		LOG_ERROR("Error: device.c : Could not read the device id");
-		return -1;
-	}
+	tmp_dev.id = read_device_id(tmp_node);
 
 	device_t *device = get_device_by_id(tmp_dev.id);
 	if(device == NULL)
@@ -473,12 +464,9 @@ int update_pin_state(char *resp_buf, xmlNode *data){
 	}
 
 	device_t tmp_dev;
-	if(read_device_id(&tmp_dev, tmp_node) != 0){
-		LOG_ERROR("Error: device.c : Could not read the device id");
-		return -1;
-	}
+	tmp_dev.id = read_device_id(tmp_node);
 
-	xmlChar *new_state = read_node_prop(tmp_node, "new_state");
+	char *new_state = read_node_prop(tmp_node, "new_state");
 	if(new_state == NULL){
 		LOG_ERROR("Error: device.c : Could not read new_state property from node");
 		return -1;
@@ -488,7 +476,7 @@ int update_pin_state(char *resp_buf, xmlNode *data){
 	if(device == NULL)
 		return -1;
 
-	relay_write(&device->rl, atoi((char *)new_state));
+	relay_write(&device->rl, atoi(new_state));
 	// it is independent of historification so I don't need to manually update rl.value nor rl.last_value
 
 	return 0;
