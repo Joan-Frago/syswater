@@ -1,9 +1,9 @@
 CC = gcc
 
-SRCDIR = ../src
-INCDIR = ../inc
+SRCDIR = src
+INCDIR = inc
 OBJDIR = obj
-BINDIR = ../bin
+BINDIR = bin
 
 TARGET = $(BINDIR)/unipi_main
 OBJS   = $(OBJDIR)/main.o \
