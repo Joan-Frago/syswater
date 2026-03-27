@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <modbus.h>
+#include <errno.h>
 
 void analyzer_set_registers(reg_t registers[REGISTER_COUNT]){
 	registers[0].name = "Tension Fase"; registers[0].id = 0;
@@ -32,7 +33,9 @@ uint32_t modbus_read(mb_t modbus, reg_t reg){
 	modbus_set_slave(mb, modbus.slave);
 	modbus_connect(mb);
 
-	modbus_read_registers(mb, reg.id, 2, tab_reg);
+	if(modbus_read_registers(mb, reg.id, 2, tab_reg) == -1){
+		LOG_ERROR("Read failed: %s", modbus_strerror(errno));
+	}
 
 	uint32_t value = (tab_reg[0] << 16) | tab_reg[1];
 
