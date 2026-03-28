@@ -5,7 +5,7 @@
 #define CONFIG_FILE_DIR "conf/home.conf"
 
 #define MAX_VAR_SIZE 256
-#define MAX_VARS 8
+#define MAX_VARS 10
 
 #define UNIPI_SYS_BASE_DIR	"UNIPI_SYS_BASE_DIR"
 #define TCP_SERVER_PORT		"TCP_SERVER_PORT"
