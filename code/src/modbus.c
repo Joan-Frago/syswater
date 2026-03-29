@@ -24,7 +24,7 @@ uint32_t modbus_read(mb_t modbus, reg_t reg){
 		mb = modbus_new_rtu(
 			get_var_value(MODBUS_RTU_DEVICE),
 			atoi(get_var_value(MODBUS_RTU_BAUD)),
-			(char)get_var_value(MODBUS_RTU_PARITY),
+			*get_var_value(MODBUS_RTU_PARITY),
 			atoi(get_var_value(MODBUS_RTU_DATABIT)),
 			atoi(get_var_value(MODBUS_RTU_STOPBIT))
 		);
