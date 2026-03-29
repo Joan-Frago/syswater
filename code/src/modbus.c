@@ -6,11 +6,27 @@
 #include <modbus.h>
 #include <errno.h>
 
+static void add_register(reg_t *, char *name, char *symbol, int id);
+
+static void add_register(reg_t *reg, char *name, char *symbol, int id){
+	reg->name = name; reg->symbol = symbol; reg->id = id;
+}
+
 void analyzer_set_registers(reg_t registers[REGISTER_COUNT]){
-	registers[0].name = "Tension Fase"; registers[0].id = 0;
-	// ...
-	// ...
-	registers[1].name = "Temperatura";  registers[1].id = 80;
+	add_register(&registers[0],  "Tension Fase L1",    "V L1",  0);
+	add_register(&registers[1],  "Corriente L1",       "A L1",  2);
+	add_register(&registers[2],  "Potencia Activa L1", "kW L1", 4);
+
+	add_register(&registers[3],  "Tension Fase L2",    "V L2",  10);
+	add_register(&registers[4],  "Corriente L2",       "A L1",  12);
+	add_register(&registers[5],  "Potencia Activa L2", "kW L1", 14);
+
+	add_register(&registers[6],  "Tension Fase L3",    "V L3",  20);
+	add_register(&registers[7],  "Corriente L3",       "A L1",  22);
+	add_register(&registers[8],  "Potencia Activa L3", "kW L1", 24);
+
+	add_register(&registers[9],  "Energia Activa",     "kW·h",  60);
+	add_register(&registers[10], "Temperatura",        "ºC",    80);
 }
 
 uint32_t modbus_read(mb_t modbus, reg_t reg){
@@ -35,6 +51,7 @@ uint32_t modbus_read(mb_t modbus, reg_t reg){
 
 	if(modbus_read_registers(mb, reg.id, 2, tab_reg) == -1){
 		LOG_ERROR("Read failed: %s", modbus_strerror(errno));
+		return 0;
 	}
 
 	uint32_t value = (tab_reg[0] << 16) | tab_reg[1];

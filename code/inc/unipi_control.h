@@ -10,10 +10,11 @@ typedef enum MB_CONNECTION_TYPE {
 	RS485
 } mb_con_t;
 
-#define REGISTER_COUNT 2
+#define REGISTER_COUNT 11
 
 typedef struct {
 	char *name;
+	char *symbol;
 	int id;
 	uint32_t value;
 	uint32_t last_value;

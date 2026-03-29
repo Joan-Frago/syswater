@@ -225,7 +225,26 @@ function set_device(device) {
 	document.getElementById(device["@id"]+"_description").textContent = device.description;
 
 	construct_device(device);
-	device.svg.onclick = () => update_pin_state(device);
+	if(device.has_mb()){
+		const modal = document.getElementById(device["@id"]+"_modal");
+		device.svg.onclick = () => {
+			modal.style.display = "flex";
+		};
+
+		const modal_close = document.getElementById(device["@id"]+"_modal-close");
+		modal_close.onclick = () => {
+			modal.style.display = "none";
+		};
+
+		window.onclick = (event) => {
+			if(event.target == modal){
+				modal.style.display = "none";
+			}
+		};
+	}
+	else {
+		device.svg.onclick = () => update_pin_state(device);
+	}
 
 	devices.push(device);
 }
@@ -368,18 +387,41 @@ function update_device_pin_status(device){
 	}
 
 	if(device.has_mb()){
+		const fields = document.querySelectorAll(".dataField");
+		for(f of fields){
+			if(f.id == device["@id"]+"_"+device["@type"]+"_field1"){
+				f.textContent = (device.modbus.register[0]["@value"] / 10) + " " + device.modbus.register[0]["@symbol"];
+			}
+
+			if(f.id == device["@id"]+"_"+device["@type"]+"_field2"){
+				f.textContent = device.modbus.register[1]["@value"] + " " + device.modbus.register[1]["@symbol"];
+			}
+
+			if(f.id == device["@id"]+"_"+device["@type"]+"_field3"){
+				f.textContent = device.modbus.register[2]["@value"] + " " + device.modbus.register[2]["@symbol"];
+			}
+		}
+
+		/*
 		const field1 = document.getElementById(device["@id"]+"_"+device["@type"]+"_field1");
 		const field2 = document.getElementById(device["@id"]+"_"+device["@type"]+"_field2");
 		const field3 = document.getElementById(device["@id"]+"_"+device["@type"]+"_field3");
 
-		field1.textContent = (device.modbus.register[0]["@value"] / 10) + " V";
-		field2.textContent = (device.modbus.register[1]["@value"] / 10) + " C";
+		field1.textContent = (device.modbus.register[0]["@value"] / 10) + " " + device.modbus.register[0]["@symbol"];
+		field2.textContent = device.modbus.register[1]["@value"] + " " + device.modbus.register[1]["@symbol"];
+		field3.textContent = device.modbus.register[2]["@value"] + " " + device.modbus.register[2]["@symbol"];
+		*/
 
-		// let html = "";
-		// for(reg of device.modbus.register){
-			// html += "<p>" + reg["@name"]+": "+(reg["@value"] / 10) + "</p>";
-		// }
-		// state_element.innerHTML = html;
+		const state_element = document.getElementById(device["@id"]+"_modal-body");
+		let html = "";
+ 		for(reg of device.modbus.register){
+ 			html += "<tr>";
+			html += "    <td>"+reg["@name"]+"</td>";
+			html += "    <td>"+reg["@value"]+"</td>";
+			html += "    <td>"+reg["@symbol"]+"</td>";
+			html += "</tr>";
+ 		}
+ 		state_element.innerHTML = html;
 	}
 }
 

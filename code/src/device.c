@@ -392,7 +392,7 @@ int get_device_pin_status(char *resp_buf, xmlNode *data){
 		sb_append(sb, "<modbus>");
 		int i;
 		for(i=0; i<REGISTER_COUNT; i++){
-			sb_appendf(sb, "<register name=\"%s\" value=\"%u\"></register>", device->mb.registers[i].name, device->mb.registers[i].value);
+			sb_appendf(sb, "<register name=\"%s\" symbol=\"%s\" value=\"%u\"></register>", device->mb.registers[i].name, device->mb.registers[i].symbol, device->mb.registers[i].value);
 		}
 		sb_append(sb, "</modbus>");
 	}
@@ -443,6 +443,15 @@ int get_device(char *resp_buf, xmlNode *data){
 
 	if(device->has_di == 1)
 		sb_appendf(sb, "<digital_input id_pin=\"%s\" pin=\"%s\" value=\"%d\"></digital_input>", device->di.id_pin, device->di.pin, device->di.value);
+
+	if(device->has_mb == 1){
+		sb_append(sb, "<modbus>");
+		int i;
+		for(i=0; i<REGISTER_COUNT; i++){
+			sb_appendf(sb, "<register name=\"%s\" symbol=\"%s\" value=\"%u\"></register>", device->mb.registers[i].name, device->mb.registers[i].symbol, device->mb.registers[i].value);
+		}
+		sb_append(sb, "</modbus>");
+	}
 	
 	sb_append(sb, "</device>");
 

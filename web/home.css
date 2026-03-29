@@ -75,3 +75,133 @@ body {
 .invisible {
 	display: none;
 }
+
+/* #### MODAL #### */
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  justify-content: center;
+  align-items: center;
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+
+/* The Close Button */
+.close {
+  align-self: flex-start;
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+/* Modal Header */
+.modal-header {
+  padding: 2px 16px;
+}
+
+/* Modal Body */
+.modal-body {padding: 2px 16px;}
+
+/* Modal Footer */
+.modal-footer {
+  padding: 2px 16px;
+}
+
+/* Modal Content */
+.modal-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  max-width: 75%;
+  position: relative;
+  background-color: #fefefe;
+  margin: auto;
+  padding: 2vh 1vw;
+  border: 1px solid #888;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+  animation-name: animatetop;
+  animation-duration: 0.4s
+}
+
+/* Add Animation */
+@keyframes animatetop {
+  from {opacity: 0}
+  to {opacity: 1}
+}
+
+/* Container for the table - add padding if needed */
+.modal-table {
+  width: 100%;
+ /* max-width: 500px;  Adjust based on your modal width */
+  margin: 20px auto;
+  border-collapse: collapse; /* Removes double borders */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden; /* Clips the corners for the radius */
+}
+
+/* Style the rows */
+.modal-table tr {
+  border-bottom: 1px solid #eeeeee;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover effect to help the eye track data */
+.modal-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Style the cells (td) */
+.modal-table td {
+  padding: 12px 16px;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Label column (first column) */
+.modal-table td:first-child {
+  font-weight: 600;
+  color: #555;
+  width: 50%;
+}
+
+/* Value column (middle column) */
+.modal-table td:nth-child(2) {
+  text-align: right;
+  font-family: 'Courier New', Courier, monospace; /* Monospaced for numbers */
+  font-weight: bold;
+  color: #2563eb; /* Nice subtle blue for the data */
+}
+
+/* Units column (last column) */
+.modal-table td:last-child {
+  color: #888;
+  font-size: 12px;
+  text-align: left;
+}
+
+/* Specific fix for your inline margin issue */
+#3_modal-body {
+  margin: 0; /* Margins don't work on tbody; use padding on cells instead */
+}
