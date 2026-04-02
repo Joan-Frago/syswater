@@ -367,8 +367,6 @@ int set_device(xmlNode *dev_node){
 }
 
 int get_device(char *resp_buf, xmlNode *data){
-	// extract device id from the xml node
-	
 	xmlNode *tmp_node = find_child_node(data, BAD_CAST "device");
 	if(tmp_node == NULL){
 		LOG_ERROR("Error: device.c : Did not find a child node called \"device\"");
@@ -399,7 +397,14 @@ int get_device(char *resp_buf, xmlNode *data){
 		sb_append(sb, "<modbus>");
 		int i;
 		for(i=0; i<REGISTER_COUNT; i++){
-			sb_appendf(sb, "<register name=\"%s\" symbol=\"%s\" value=\"%u\"></register>", device->mb.registers[i].name, device->mb.registers[i].symbol, device->mb.registers[i].value);
+			sb_appendf(
+				sb,
+				"<register name=\"%s\" symbol=\"%s\" line=\"%s\" value=\"%u\"></register>",
+				device->mb.registers[i].name,
+				device->mb.registers[i].symbol,
+				device->mb.registers[i].line,
+				device->mb.registers[i].value
+			);
 		}
 		sb_append(sb, "</modbus>");
 	}

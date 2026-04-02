@@ -21,10 +21,18 @@
 
   <rect x="80" y="100" width="240" height="150" rx="8" fill="#ffb347" stroke="#aa7a00"/>
 
-  <g font-family="monospace" font-size="38" fill="#333">
-    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field1" class="dataField" x="100" y="150"></text>
-    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field2" class="dataField" x="100" y="190"></text>
-    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field3" class="dataField" x="100" y="230"></text>
+  <g font-family="monospace" font-size="35" fill="#333">
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field1_value"  class="dataField" x="95"  y="150"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field1_symbol" class="dataField" x="225" y="150"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field1_line"   class="dataField" x="265" y="150"></text>
+
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field2_value"  class="dataField" x="95"  y="190"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field2_symbol" class="dataField" x="225" y="190"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field2_line"   class="dataField" x="265" y="190"></text>
+
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field3_value"  class="dataField" x="95"  y="230"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field3_symbol" class="dataField" x="225" y="230"></text>
+    <text id="#@ID_DEVICE@#_#@DEVICE_TYPE@#_field3_line"   class="dataField" x="265" y="230"></text>
   </g>
 
   <text x="80" y="80" font-size="16" fill="#c00" font-weight="bold">CIRCUTOR</text>

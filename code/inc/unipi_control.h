@@ -15,6 +15,7 @@ typedef enum MB_CONNECTION_TYPE {
 typedef struct {
 	char *name;
 	char *symbol;
+	char *line;
 	int id;
 	uint32_t value;
 	uint32_t last_value;

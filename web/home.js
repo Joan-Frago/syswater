@@ -387,38 +387,14 @@ function update_device_pin_status(device){
 	}
 
 	if(device.has_mb()){
-		const fields = document.querySelectorAll(".dataField");
-		for(f of fields){
-			if(f.id == device["@id"]+"_"+device["@type"]+"_field1"){
-				f.textContent = (device.modbus.register[0]["@value"] / 10) + " " + device.modbus.register[0]["@symbol"];
-			}
-
-			if(f.id == device["@id"]+"_"+device["@type"]+"_field2"){
-				f.textContent = device.modbus.register[1]["@value"] + " " + device.modbus.register[1]["@symbol"];
-			}
-
-			if(f.id == device["@id"]+"_"+device["@type"]+"_field3"){
-				f.textContent = device.modbus.register[2]["@value"] + " " + device.modbus.register[2]["@symbol"];
-			}
-		}
-
-		/*
-		const field1 = document.getElementById(device["@id"]+"_"+device["@type"]+"_field1");
-		const field2 = document.getElementById(device["@id"]+"_"+device["@type"]+"_field2");
-		const field3 = document.getElementById(device["@id"]+"_"+device["@type"]+"_field3");
-
-		field1.textContent = (device.modbus.register[0]["@value"] / 10) + " " + device.modbus.register[0]["@symbol"];
-		field2.textContent = device.modbus.register[1]["@value"] + " " + device.modbus.register[1]["@symbol"];
-		field3.textContent = device.modbus.register[2]["@value"] + " " + device.modbus.register[2]["@symbol"];
-		*/
-
 		const state_element = document.getElementById(device["@id"]+"_modal-body");
 		let html = "";
  		for(reg of device.modbus.register){
  			html += "<tr>";
-			html += "    <td>"+reg["@name"]+"</td>";
-			html += "    <td>"+reg["@value"]+"</td>";
-			html += "    <td>"+reg["@symbol"]+"</td>";
+			html += "    <td>"+reg["@name"]   + "</td>";
+			html += "    <td>"+reg["@value"]  + "</td>";
+			html += "    <td>"+reg["@symbol"] + "</td>";
+			html += "    <td>"+reg["@line"]   + "</td>";
 			html += "</tr>";
  		}
  		state_element.innerHTML = html;
@@ -431,8 +407,9 @@ function update_device_svg(device){
 
 	// depending of its type execute a function that updates that type of svg
 	switch(device["@type"]){
-		case "BLIND": 		update_svg_blind(device); break;
+		case "BLIND": 		update_svg_blind(device);      break;
 		case "LIGHT_BULB": 	update_svg_light_bulb(device); break;
+		case "ANALYZER":	update_svg_analyzer(device);   break;
 		default: break;
 	}
 }
@@ -464,6 +441,43 @@ function update_svg_light_bulb(device){
 			bulb_color.setAttribute("fill", "#FFF");
 		}
 	}
+}
+
+function update_svg_analyzer(device){
+	const fields = document.querySelectorAll(".dataField");
+	fields.forEach((f) => {
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field1_value"){
+			f.textContent = device.modbus.register[0]["@value"] / 10;
+		}
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field1_symbol"){
+			f.textContent = device.modbus.register[0]["@symbol"];
+		}
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field1_line"){
+			f.textContent = device.modbus.register[0]["@line"];
+		}
+
+
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field2_value"){
+			f.textContent = device.modbus.register[1]["@value"] / 10;
+		}
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field2_symbol"){
+			f.textContent = device.modbus.register[1]["@symbol"];
+		}
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field2_line"){
+			f.textContent = device.modbus.register[1]["@line"];
+		}
+
+
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field3_value"){
+			f.textContent = device.modbus.register[2]["@value"] / 10;
+		}
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field3_symbol"){
+			f.textContent = device.modbus.register[2]["@symbol"];
+		}
+		if(f.id == device["@id"]+"_"+device["@type"]+"_field3_line"){
+			f.textContent = device.modbus.register[2]["@line"];
+		}
+	});
 }
 
 function load_pin_data(){
