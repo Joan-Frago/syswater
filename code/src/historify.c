@@ -2,6 +2,7 @@
 #include "../inc/logger.h"
 #include "../inc/unipi_control.h"
 #include "../inc/device.h"
+#include "../inc/db.h"
 
 // #define LOG_HISTORIFY
 
@@ -58,6 +59,7 @@ static void historify_on_change(device_t *device){
 			#ifdef LOG_HISTORIFY
 			LOG_DEBUG("Historify device \"%s\" Relay \"%s\". Value = %d.",device->name, device->rl.id_pin, device->rl.value);
 			#endif
+			db_log(device->id, "relay", device->rl.id_pin, (float)device->rl.value);
 		}
 	}
 
@@ -67,6 +69,7 @@ static void historify_on_change(device_t *device){
 			#ifdef LOG_HISTORIFY
 			LOG_DEBUG("Historify device \"%s\" DigitalInput \"%s\". Value = %d.",device->name, device->di.id_pin, device->di.value);
 			#endif
+			db_log(device->id, "digital_input", device->di.id_pin, (float)device->di.value);
 		}
 	}
 
@@ -78,6 +81,7 @@ static void historify_on_change(device_t *device){
 				#ifdef LOG_HISTORIFY
 				LOG_DEBUG("Historify device \"%s\" Modbus: register \"%d\". Value = %d.",device->name, device->mb.registers[i].id, device->mb.registers[i].value);
 				#endif
+				db_log(device->id, "modbus", device->mb.registers[i].name, (float)device->mb.registers[i].value);
 			}
 		}
 	}
@@ -89,6 +93,7 @@ static void historify_all(device_t *device){
 		#ifdef LOG_HISTORIFY
 		LOG_DEBUG("Historify device \"%s\" Relay \"%s\". Value = %d.",device->name, device->rl.id_pin, device->rl.value);
 		#endif
+		db_log(device->id, "relay", device->rl.id_pin, (float)device->rl.value);
 	}
 
 	// DIGITAL INPUT
@@ -96,6 +101,7 @@ static void historify_all(device_t *device){
 		#ifdef LOG_HISTORIFY
 		LOG_DEBUG("Historify device \"%s\" DigitalInput \"%s\". Value = %d.",device->name, device->di.id_pin, device->di.value);
 		#endif
+		db_log(device->id, "digital_input", device->di.id_pin, (float)device->di.value);
 	}
 
 	// MODBUS
@@ -103,7 +109,10 @@ static void historify_all(device_t *device){
 		#ifdef LOG_HISTORIFY
 			int i;
 			for(i=0; i<REGISTER_COUNT; i++){
+				#ifdef LOG_HISTORIFY
 				LOG_DEBUG("Historify device \"%s\" Modbus: register \"%d\". Value = %d.",device->name, device->mb.registers[i].id, device->mb.registers[i].value);
+				#endif
+				db_log(device->id, "modbus", device->mb.registers[i].name, (float)device->mb.registers[i].value);
 			}
 		#endif
 	}

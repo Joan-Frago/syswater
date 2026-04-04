@@ -19,6 +19,7 @@ OBJS   = $(OBJDIR)/main.o \
 		 $(OBJDIR)/loggerconf.o \
 		 $(OBJDIR)/historify.o \
 		 $(OBJDIR)/fire.o \
+		 $(OBJDIR)/db.o \
 		 $(OBJDIR)/sb.o
 
 XML2_CFLAGS = $(shell xml2-config --cflags)
@@ -27,7 +28,11 @@ XML2_LIBS = $(shell xml2-config --libs)
 LIBMODBUS_CFLAGS = $(shell pkg-config --cflags libmodbus)
 LIBMODBUS_LIBS = $(shell pkg-config --libs libmodbus)
 
-CFLAGS = -Wall -I$(INCDIR) $(XML2_CFLAGS) $(LIBMODBUS_CFLAGS)
+POSTGRES_INCDIR = $(shell pg_config --includedir)
+POSTGRES_LIBDIR = $(shell pg_config --libdir)
+POSTGRES_CFLAGS = -I$(POSTGRES_INCDIR) -L$(POSTGRES_LIBDIR) -lpq
+
+CFLAGS = -Wall -I$(INCDIR) $(XML2_CFLAGS) $(LIBMODBUS_CFLAGS) $(POSTGRES_CFLAGS)
 LDFLAGS = $(XML2_LIBS) $(LIBMODBUS_LIBS)
 
 native: CC = gcc

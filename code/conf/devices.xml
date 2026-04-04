@@ -45,9 +45,9 @@
 		<name>Calentador Agua</name>
 		<description></description>
 		<historify active="0" period="0"></historify>
-		<fire active="1" period="0">
+		<fire active="0" period="0">
 			<date>
-				<entry period="24" duration="5" start="23">01/01</entry>
+				<entry period="24" duration="5" start="00">01/01</entry>
 				<entry period="48" duration="5" start="00">01/06</entry>
 			</date>
 		</fire>
