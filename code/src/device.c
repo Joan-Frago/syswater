@@ -16,6 +16,7 @@ static xmlNode *read_devices_xml_by_id(int id);
 static int read_devices_xml();
 
 static char *read_node_prop(xmlNode *dev_node, const char *prop);
+static char *read_node_content(const char *expression, xmlXPathContext *);
 static int read_device_id(xmlNode *);
 static int read_device_type(device_t *device, xmlXPathContext *);
 static int read_device_name(device_t *device, xmlXPathContext *);
@@ -175,73 +176,51 @@ static char *read_node_prop(xmlNode *node, const char *prop){
 	return (char *)_prop;
 }
 
+static char *read_node_content(const char *xpath_expression, xmlXPathContext *xpath_ctx){
+	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST xpath_expression, xpath_ctx);
+
+	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
+	xmlChar *content = xmlNodeGetContent(node);
+
+	char *ret = strdup((char *)content);
+
+	xmlFree(content);
+	xmlXPathFreeObject(xpath_obj);
+
+	return ret;
+}
+
 static int read_device_id(xmlNode *dev_node){
 	char *id = read_node_prop(dev_node, "id");
-
 	return atoi(id);
 }
 
 static int read_device_type(device_t *device, xmlXPathContext *xpath_ctx){
-	char *expr = "./type";
-	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
-
-	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
-	xmlChar *content = xmlNodeGetContent(node);
-
-	device->type = strdup((char *)content);
-
-	xmlFree(content);
-	xmlXPathFreeObject(xpath_obj);
-
+	device->type = read_node_content("./type", xpath_ctx);
 	return 0;
 }
 
 static int read_device_name(device_t *device, xmlXPathContext *xpath_ctx){
-	char *expr = "./name";
-	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
-
-	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
-	xmlChar *content = xmlNodeGetContent(node);
-
-	device->name = strdup((char *)content);
-	//printf("Device [%d] name: %s\n", device->id, device->name);
-
-	xmlFree(content);
-	xmlXPathFreeObject(xpath_obj);
-
+	device->name = read_node_content("./name", xpath_ctx);
 	return 0;
 }
 
 static int read_device_description(device_t *device, xmlXPathContext *xpath_ctx){
-	char *expr = "./description";
-	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
-
-	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
-	xmlChar *content = xmlNodeGetContent(node);
-
-	device->description = strdup((char *)content);
-	//printf("Device [%d] description: %s\n", device->id, device->description);
-
-	xmlFree(content);
-	xmlXPathFreeObject(xpath_obj);
-
+	device->description = read_node_content("./description", xpath_ctx);
 	return 0;
 }
 
 static int read_device_historify(device_t *device, xmlXPathContext *xpath_ctx){
 	char *expr = "./historify";
 	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
-
 	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
-	xmlChar *active = xmlGetProp(node, BAD_CAST "active");
-	xmlChar *period = xmlGetProp(node, BAD_CAST "period"); // Period must be between 0 and 9
 
-	device->hist.active = char2int((char *)active);
-	device->hist.period = char2int((char *)period);
-	//printf("Device [%d] historify: active=%d period=%d\n", device->id, device->hist.active, device->hist.period);
+	char *active = read_node_prop(node, "active");
+	char *period = read_node_prop(node, "period");
 
-	xmlFree(active);
-	xmlFree(period);
+	device->hist.active = atoi(active);
+	device->hist.period = atoi(period);
+
 	xmlXPathFreeObject(xpath_obj);
 
 	return 0;
@@ -252,17 +231,14 @@ static int read_device_fire(device_t *device, xmlXPathContext *xpath_ctx){
 	xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(BAD_CAST expr, xpath_ctx);
 
 	xmlNode *node = xpath_obj->nodesetval->nodeTab[0];
-	xmlChar *active = xmlGetProp(node, BAD_CAST "active");
-	xmlChar *period = xmlGetProp(node, BAD_CAST "period");
+	char *active = read_node_prop(node, "active");
+	char *period = read_node_prop(node, "period");
 
-	device->fire.active = char2int((char *)active);
-	device->fire.period = char2int((char *)period);
-	//printf("Device [%d] fire: active=%d period=%d\n", device->id, device->fire.active, device->fire.period);
+	device->fire.active = atoi(active);
+	device->fire.period = atoi(period);
 
 	read_device_fire_date(device, xpath_ctx);
 
-	xmlFree(active);
-	xmlFree(period);
 	xmlXPathFreeObject(xpath_obj);
 
 	return 0;
@@ -295,9 +271,8 @@ static int read_device_relay(device_t *device, xmlXPathContext *xpath_ctx){
 	if(xpath_obj_relay && !xmlXPathNodeSetIsEmpty(xpath_obj_relay->nodesetval)){
 		xmlNode *node_relay = xpath_obj_relay->nodesetval->nodeTab[0];
 
-		device->rl.id_pin = (char *)xmlGetProp(node_relay, BAD_CAST "id_pin");
-		device->rl.pin = (char *)xmlGetProp(node_relay, BAD_CAST "pin");
-		//printf("Device [%d] relay: id_pin=%s pin=%s\n", device->id, device->rl.id_pin, device->rl.pin);
+		device->rl.id_pin = read_node_prop(node_relay, "id_pin");
+		device->rl.pin    = read_node_prop(node_relay, "pin");
 	}
 	if(xpath_obj_relay) xmlXPathFreeObject(xpath_obj_relay);
 
@@ -307,11 +282,10 @@ static int read_device_relay(device_t *device, xmlXPathContext *xpath_ctx){
 static int read_device_digital_input(device_t *device, xmlXPathContext *xpath_ctx){
 	xmlXPathObjectPtr xpath_obj_relay = xmlXPathEvalExpression(BAD_CAST "./digital_input", xpath_ctx);
 	if(xpath_obj_relay && !xmlXPathNodeSetIsEmpty(xpath_obj_relay->nodesetval)){
-		xmlNode *node_relay = xpath_obj_relay->nodesetval->nodeTab[0];
+		xmlNode *node = xpath_obj_relay->nodesetval->nodeTab[0];
 
-		device->di.id_pin = (char *)xmlGetProp(node_relay, BAD_CAST "id_pin");
-		device->di.pin = (char *)xmlGetProp(node_relay, BAD_CAST "pin");
-		//printf("Device [%d] digital_input: id_pin=%s pin=%s\n", device->id, device->di.id_pin, device->di.pin);
+		device->di.id_pin = read_node_prop(node, "id_pin");
+		device->di.pin    = read_node_prop(node, "pin");
 	}
 	if(xpath_obj_relay) xmlXPathFreeObject(xpath_obj_relay);
 
@@ -323,19 +297,16 @@ static int read_device_modbus(device_t *device, xmlXPathContext *xpath_ctx){
 	if(xpath_obj_mb && !xmlXPathNodeSetIsEmpty(xpath_obj_mb->nodesetval)){
 		xmlNode *node_mb = xpath_obj_mb->nodesetval->nodeTab[0];
 
-		char *mb_con_type = (char *)xmlGetProp(node_mb, BAD_CAST "connection_type");
-		if(strcmp(mb_con_type, "TCP") == 0){
+		char *mb_con_type = read_node_prop(node_mb, "connection_type");
+		if(strcmp(mb_con_type, "TCP") == 0)
 			device->mb.connection_type = TCP;
-		}
-		else if(strcmp(mb_con_type, "RS485") == 0){
+		else if(strcmp(mb_con_type, "RS485") == 0)
 			device->mb.connection_type = RS485;
-		}
 		else {
 			LOG_ERROR("Invalid modbus connection type \"%s\". Can not read modbus node in config xml file.", mb_con_type);
 			return -1;
 		}
-
-		device->mb.slave = atoi((char *)xmlGetProp(node_mb, BAD_CAST "slave"));
+		device->mb.slave = atoi(read_node_prop(node_mb, "slave"));
 	}
 	if(xpath_obj_mb) xmlXPathFreeObject(xpath_obj_mb);
 
