@@ -1,10 +1,6 @@
-# HOME-AUTO
+# SYSWATER
 
 - Good SVG download page [Vecteezy](https://www.vecteezy.com/)
-
-## TODO
-
-- Add timestamp to database logging
 
 ## UNIPI SYSFS
 
