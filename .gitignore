@@ -12,6 +12,7 @@ go.*
 
 # conf files
 home-auto-web/config/conf.json
+code/conf/home.conf
 
 # object files and binaries
 code/bin/*
