@@ -7,7 +7,7 @@ function server_connect($silent = true){
 
 	$address = 'msi';
 	//$address = 'unipi';
-	$service_port = 8080;
+	$service_port = 8383;
 
 	$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 	if ($socket === false) {
