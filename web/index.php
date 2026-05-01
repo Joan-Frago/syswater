@@ -13,7 +13,7 @@
 </head>
 <body>
 	<header class="header">
-		<h1>Control Panel</h1>
+		<h1>Riego Automatico</h1>
 	</header>
 	<main class="house-grid">
 
