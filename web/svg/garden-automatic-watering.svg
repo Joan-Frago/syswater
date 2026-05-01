@@ -393,15 +393,18 @@
    transform="translate(-2.3241234,296.18843)">
 </g>
 <g
-   id="#@ID_DEVICE@#_water-flow"
+   id="gsome-group--a"
    transform="translate(-2.3241234,296.18843)">
-	<rect
-   style="fill:url(#linearGradient8);stroke-width:1.10973"
-   id="rect1"
-   width="70.062805"
-   height="993.85388"
-   x="518.52081"
-   y="46.388287" /><g
+   <rect
+       id="#@ID_DEVICE@#_water-flow"
+       class="dataField"
+       style="fill:url(#linearGradient8);stroke-width:1.10973"
+       width="70.062805"
+       height="993.85388"
+       x="518.52081"
+       y="46.388287"
+   />
+   <g
    id="group-R5"
    transform="matrix(0.44347223,0,0,0.44347223,61.285739,230.93848)"><path
      id="path2"

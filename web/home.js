@@ -167,6 +167,7 @@ texts = {
 };
 
 let devices = [];
+let data_fields = [];
 
 function get_local_device(id){
 	return devices.find(d => d["@id"] == id);
@@ -212,12 +213,22 @@ async function set_all_devices(){
 				return;
 			}
 
+            set_data_fields();
 			set_device(device_json.device);
 
 		} catch (error) {
 			console.error("Error: ", error);
 		}
 	});
+}
+
+function set_data_fields(){
+    let fields = document.querySelectorAll(".dataField");
+    fields.forEach(f => data_fields.push(f));
+}
+
+function get_data_field_by_id(field_id){
+    return data_fields.filter(f => f.id === field_id);
 }
 
 function set_device(device) {
@@ -405,14 +416,13 @@ function update_device_pin_status(device){
 }
 
 function update_device_svg(device){
-	// get device svg ( id device + device type )
 	const svg = document.getElementById(device["@id"] + device["@type"]);
 
-	// depending of its type execute a function that updates that type of svg
 	switch(device["@type"]){
-		case "BLIND": 		update_svg_blind(device);      break;
-		case "LIGHT_BULB": 	update_svg_light_bulb(device); break;
-		case "ANALYZER":	update_svg_analyzer(device);   break;
+		case "BLIND": 		    update_svg_blind(device);           break;
+		case "LIGHT_BULB": 	    update_svg_light_bulb(device);      break;
+		case "ANALYZER":	    update_svg_analyzer(device);        break;
+        case "WATERING_SYSTEM": update_svg_watering_system(device); break;
 		default: break;
 	}
 }
@@ -447,40 +457,47 @@ function update_svg_light_bulb(device){
 }
 
 function update_svg_analyzer(device){
-	const fields = document.querySelectorAll(".dataField");
-	fields.forEach((f) => {
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field1_value"){
-			f.textContent = device.modbus.register[0]["@value"];
-		}
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field1_symbol"){
-			f.textContent = device.modbus.register[0]["@symbol"];
-		}
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field1_line"){
-			f.textContent = device.modbus.register[0]["@line"];
-		}
+    let f;
 
+    // FIELD 1
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_value");
+    if(f) f.textContent = device.modbus.register[0]["@value"];
 
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field2_value"){
-			f.textContent = device.modbus.register[1]["@value"];
-		}
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field2_symbol"){
-			f.textContent = device.modbus.register[1]["@symbol"];
-		}
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field2_line"){
-			f.textContent = device.modbus.register[1]["@line"];
-		}
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_symbol");
+    if(f) f.textContent = device.modbus.register[0]["@symbol"];
 
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_line");
+    if(f) f.textContent = device.modbus.register[0]["@line"];
 
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field3_value"){
-			f.textContent = device.modbus.register[2]["@value"];
-		}
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field3_symbol"){
-			f.textContent = device.modbus.register[2]["@symbol"];
-		}
-		if(f.id == device["@id"]+"_"+device["@type"]+"_field3_line"){
-			f.textContent = device.modbus.register[2]["@line"];
-		}
-	});
+    // FIELD 2
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_value");
+    if(f) f.textContent = device.modbus.register[1]["@value"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_symbol");
+    if(f) f.textContent = device.modbus.register[1]["@symbol"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_line");
+    if(f) f.textContent = device.modbus.register[1]["@line"];
+
+    // FIELD 3
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_value");
+    if(f) f.textContent = device.modbus.register[2]["@value"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_symbol");
+    if(f) f.textContent = device.modbus.register[2]["@symbol"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_line");
+    if(f) f.textContent = device.modbus.register[2]["@line"];
+}
+
+function update_svg_watering_system(device) {
+	if(!device.has_rl()) return
+
+    const water_fields = get_data_field_by_id(device["@id"]+"_water-flow");
+    water_fields.forEach(field => {
+        if(device.relay["@value"] == 1) field.classList.remove(classes.INVISIBLE);
+        else field.classList.add(classes.INVISIBLE);
+    });
 }
 
 function load_pin_data(){
