@@ -428,66 +428,66 @@ function update_device_svg(device){
 }
 
 function update_svg_blind(device){
-	if(device.has_rl()){
-		if(device.relay["@value"] == 1){
-			let blank = document.getElementById(device["@id"] + "_blank");
-			blank.classList.remove(classes.INVISIBLE);
-		}
-		else {
-			let blank = document.getElementById(device["@id"] + "_blank");
-			blank.classList.add(classes.INVISIBLE);
-		}
-	}
+	if(!device.has_rl()) return
+
+    let blank = get_data_field_by_id(device["@id"] + "_blank");
+
+    if(device.relay["@value"] == 1){
+        blank.forEach(field => field.classList.remove(classes.INVISIBLE));
+    }
+    else {
+        blank.forEach(field => field.classList.add(classes.INVISIBLE));
+    }
 }
 
 function update_svg_light_bulb(device){
-	const bulb_glow  = document.getElementById(device["@id"]+"_bulb_glow");
-	const bulb_color = document.getElementById(device["@id"]+"_path");
+	if(!device.has_di()) return
+
+	const bulb_glow  = get_data_field_by_id(device["@id"]+"_bulb_glow");
+	const bulb_color = get_data_field_by_id(device["@id"]+"_path");
 	
-	if(device.has_di()){
-		if(device.digital_input["@value"] == 1){
-			bulb_glow.classList.remove(classes.INVISIBLE);
-			bulb_color.setAttribute("fill", "url(#"+device["@type"]+"_color)");
-		}
-		else {
-			bulb_glow.classList.add(classes.INVISIBLE);
-			bulb_color.setAttribute("fill", "#FFF");
-		}
-	}
+    if(device.digital_input["@value"] == 1){
+        bulb_glow.forEach(field => field.classList.remove(classes.INVISIBLE));
+        bulb_color.forEach(field => field.setAttribute("fill", "url(#"+device["@type"]+"_color)"));
+    }
+    else {
+        bulb_glow.forEach(field => field.classList.add(classes.INVISIBLE));
+        bulb_color.forEach(field => field.setAttribute("fill", "#FFF"));
+    }
 }
 
 function update_svg_analyzer(device){
-    let f;
+    let fields;
 
     // FIELD 1
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_value");
-    if(f) f.textContent = device.modbus.register[0]["@value"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_value");
+    fields.forEach(f => f.textContent = device.modbus.register[0]["@value"]);
 
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_symbol");
-    if(f) f.textContent = device.modbus.register[0]["@symbol"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_symbol");
+    fields.forEach(f => f.textContent = device.modbus.register[0]["@symbol"]);
 
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_line");
-    if(f) f.textContent = device.modbus.register[0]["@line"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_line");
+    fields.forEach(f => f.textContent = device.modbus.register[0]["@line"]);
 
     // FIELD 2
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_value");
-    if(f) f.textContent = device.modbus.register[1]["@value"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_value");
+    fields.forEach(f => f.textContent = device.modbus.register[1]["@value"]);
 
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_symbol");
-    if(f) f.textContent = device.modbus.register[1]["@symbol"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_symbol");
+    fields.forEach(f => f.textContent = device.modbus.register[1]["@symbol"]);
 
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_line");
-    if(f) f.textContent = device.modbus.register[1]["@line"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_line");
+    fields.forEach(f => f.textContent = device.modbus.register[1]["@line"]);
 
     // FIELD 3
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_value");
-    if(f) f.textContent = device.modbus.register[2]["@value"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_value");
+    fields.forEach(f => f.textContent = device.modbus.register[2]["@value"]);
 
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_symbol");
-    if(f) f.textContent = device.modbus.register[2]["@symbol"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_symbol");
+    fields.forEach(f => f.textContent = device.modbus.register[2]["@symbol"]);
 
-    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_line");
-    if(f) f.textContent = device.modbus.register[2]["@line"];
+    fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_line");
+    fields.forEach(f => f.textContent = device.modbus.register[2]["@line"]);
 }
 
 function update_svg_watering_system(device) {
