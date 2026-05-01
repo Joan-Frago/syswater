@@ -457,6 +457,7 @@ function update_svg_light_bulb(device){
 }
 
 function update_svg_analyzer(device){
+<<<<<<< HEAD
     let fields;
 
     // FIELD 1
@@ -488,6 +489,39 @@ function update_svg_analyzer(device){
 
     fields = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_line");
     fields.forEach(f => f.textContent = device.modbus.register[2]["@line"]);
+=======
+    let f;
+
+    // FIELD 1
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_value");
+    if(f) f.textContent = device.modbus.register[0]["@value"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_symbol");
+    if(f) f.textContent = device.modbus.register[0]["@symbol"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field1_line");
+    if(f) f.textContent = device.modbus.register[0]["@line"];
+
+    // FIELD 2
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_value");
+    if(f) f.textContent = device.modbus.register[1]["@value"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_symbol");
+    if(f) f.textContent = device.modbus.register[1]["@symbol"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field2_line");
+    if(f) f.textContent = device.modbus.register[1]["@line"];
+
+    // FIELD 3
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_value");
+    if(f) f.textContent = device.modbus.register[2]["@value"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_symbol");
+    if(f) f.textContent = device.modbus.register[2]["@symbol"];
+
+    f = get_data_field_by_id(device["@id"]+"_"+device["@type"]+"_field3_line");
+    if(f) f.textContent = device.modbus.register[2]["@line"];
+>>>>>>> a1bc2f0 (fix inconsistency between primary and modal svg + a new svg)
 }
 
 function update_svg_watering_system(device) {
